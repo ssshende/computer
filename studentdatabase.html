@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Jayawantrao Sawant Polytechnic - Student Database</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f7fb;color:#172033}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:255px;background:#172033;color:#fff;padding:20px;flex-shrink:0}
+.brand{text-align:center;padding-bottom:20px;border-bottom:1px solid #ffffff22}
+.brand-logo{width:55px;height:55px;border-radius:12px;background:#2563eb;display:flex;align-items:center;justify-content:center;margin:auto;font-weight:bold;font-size:20px}
+.brand h2{font-size:17px;margin:12px 0 5px}.brand p{margin:0;color:#cbd5e1;font-size:12px}
+.nav{margin-top:20px}.nav button{display:block;width:100%;border:0;background:transparent;color:#e2e8f0;text-align:left;padding:12px;border-radius:8px;margin:5px 0}.nav button:hover,.nav button.active{background:#2563eb;color:white}.nav-icon{display:inline-block;width:28px}
+.main{flex:1;min-width:0}.topbar{background:#fff;padding:18px 25px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0}.top-title h1{font-size:21px;margin:0}.top-title p{margin:5px 0 0;color:#64748b;font-size:13px}.college-badge{background:#e8f0ff;color:#2563eb;padding:10px 15px;border-radius:9px;font-weight:bold}.content{padding:25px;max-width:1400px;margin:auto}
+.card{background:#fff;border-radius:12px;box-shadow:0 3px 15px #0000000d;margin-bottom:20px;overflow:hidden}.card-header{padding:20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}.card-header h2{margin:0;font-size:19px}.card-header p{margin:6px 0 0;color:#64748b;font-size:13px}.card-body{padding:20px}
+.dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-bottom:20px}.stat-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 3px 15px #0000000d;display:flex;justify-content:space-between;align-items:center}.stat-info small{color:#64748b}.stat-info strong{display:block;font-size:28px;margin-top:8px}.stat-icon{width:45px;height:45px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#e8f0ff}.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:6px}.field input,.field select,.field textarea,input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:7px;background:#fff}.field textarea{min-height:85px;resize:vertical}.full{grid-column:1/-1}.info-section{border:1px solid #e2e8f0;border-radius:10px;margin-bottom:18px;overflow:hidden}.section-title{padding:13px 16px;background:#f8fafc;font-weight:bold;display:flex;gap:10px;align-items:center}.section-number{width:28px;height:28px;border-radius:50%;background:#2563eb;color:white;display:flex;align-items:center;justify-content:center}.section-content{padding:18px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.btn{border:0;border-radius:7px;padding:10px 15px}.btn-primary{background:#2563eb;color:white}.btn-warning{background:#f59e0b;color:white}.btn-success{background:#16a34a;color:white}.btn-danger{background:#dc2626;color:white}.btn-light{background:#e2e8f0;color:#172033}.table-wrap{overflow:auto}.search{margin-bottom:15px}.search input{max-width:450px}.table{width:100%;border-collapse:collapse;min-width:900px}.table th,.table td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left}.table th{background:#f1f5f9}.badge{display:inline-block;padding:5px 8px;border-radius:6px;background:#dbeafe;color:#1d4ed8;font-size:11px}.toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:13px 18px;border-radius:8px;box-shadow:0 5px 20px #0003;z-index:99}.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f4f7fb}.login-card{width:430px;background:#fff;border-radius:14px;box-shadow:0 8px 30px #00000014;padding:30px}.login-card h1{text-align:center;margin:10px 0 5px}.login-card .subtitle{text-align:center;color:#64748b;margin-bottom:25px}.role-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}.role-btn{padding:12px;border:1px solid #cbd5e1;background:#fff;border-radius:8px}.role-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}.login-card label{display:block;font-size:13px;font-weight:bold;margin:10px 0 5px}.login-card input{margin-bottom:5px}.student-only-note{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:12px;border-radius:8px;font-size:12px;margin-bottom:15px}.login-error{color:#dc2626;font-size:13px;min-height:20px;margin:8px 0}.mobile-menu{display:none}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #ffffff66;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4f7fb;font-size:16px;color:#475569}
+.field label .req{color:#dc2626;font-weight:bold;margin-left:2px}
+.field input:required:invalid,.field select:required:invalid,.field textarea:required:invalid{border-color:#fca5a5}
+.field input:required:valid,.field select:required:valid,.field textarea:required:valid{border-color:#86efac}
+.validation-banner{display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:14px 16px;border-radius:10px;margin-bottom:18px;font-size:13px}
+.validation-banner.show{display:block}
+.validation-banner strong{display:block;margin-bottom:8px;font-size:14px}
+.validation-banner ul{margin:0;padding-left:20px}
+.validation-banner li{margin:3px 0}
+.field.has-error input,.field.has-error select,.field.has-error textarea{border-color:#dc2626;background:#fef2f2}
+.print-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:18px}
+.print-panel .pp-title{font-weight:bold;margin-bottom:10px;color:#172033}
+.print-panel .pp-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.print-panel .pp-group{min-width:200px}
+.print-panel .pp-label{display:block;font-size:12px;font-weight:bold;margin-bottom:5px}
+.print-panel .pp-controls{display:flex;gap:6px}
+.print-panel select{flex:1;padding:9px 10px;border:1px solid #cbd5e1;border-radius:7px;background:#fff}
+.photo-upload{display:flex;flex-direction:column;align-items:center;gap:10px}
+.photo-preview{width:120px;height:120px;border-radius:12px;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;background:#f8fafc;overflow:hidden;position:relative;cursor:pointer}
+.photo-preview img{width:100%;height:100%;object-fit:cover}
+.photo-preview .placeholder{font-size:32px;color:#94a3b8}
+.photo-preview input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.photo-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.photo-actions button{font-size:12px;padding:8px 12px}
+.photo-hint{font-size:11px;color:#64748b;text-align:center;line-height:1.5}
+.table-photo{width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid #e2e8f0}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body{background:#fff;color:#000}
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  #printArea{position:absolute;left:0;top:0;width:100%;background:#fff;padding:0}
+  #printArea .print-header{text-align:center;margin-bottom:12px}
+  #printArea .print-header h1{font-size:18px;margin:0 0 4px}
+  #printArea .print-header h2{font-size:14px;margin:0 0 4px}
+  #printArea .print-header p{font-size:11px;margin:0}
+  #printArea table{width:100%;border-collapse:collapse;font-size:8px;table-layout:auto}
+  #printArea th,#printArea td{border:1px solid #333;padding:4px 3px;text-align:left;vertical-align:top;word-break:break-word}
+  #printArea th{font-weight:bold}
+  #printArea .print-footer{margin-top:10px;font-size:9px;text-align:right}
+}
+@media(max-width:800px){.sidebar{width:210px}.form-grid{grid-template-columns:1fr}.mobile-menu{display:block}.top-title h1{font-size:16px}}
+@media(max-width:600px){.app{display:block}.sidebar{width:100%}.content{padding:15px}.topbar{padding:15px}.college-badge{display:none}}
+
+/* ===== Crop Modal ===== */
+.crop-overlay{position:fixed;inset:0;background:#0b1220cc;display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.crop-overlay.show{display:flex}
+.crop-modal{background:#fff;border-radius:14px;box-shadow:0 20px 60px #00000040;width:min(560px,100%);overflow:hidden;display:flex;flex-direction:column}
+.crop-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}
+.crop-header h3{margin:0;font-size:16px}
+.crop-header .crop-sub{font-size:12px;color:#64748b;margin-top:2px}
+.crop-body{padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.crop-stage{position:relative;width:380px;height:380px;max-width:100%;background:#0f172a;border-radius:12px;overflow:hidden;cursor:grab;touch-action:none}
+.crop-stage:active{cursor:grabbing}
+.crop-canvas{display:block;width:100%;height:100%}
+.crop-frame{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:48%;height:48%;border:2px solid #fff;box-shadow:0 0 0 1px #00000060;pointer-events:none;border-radius:4px}
+.crop-frame::before,.crop-frame::after{content:"";position:absolute;pointer-events:none}
+.crop-frame::before{left:33.33%;right:33.33%;top:0;bottom:0;border-left:1px dashed #ffffffcc;border-right:1px dashed #ffffffcc}
+.crop-frame::after{top:33.33%;bottom:33.33%;left:0;right:0;border-top:1px dashed #ffffffcc;border-bottom:1px dashed #ffffffcc}
+
+.crop-controls{width:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.crop-controls label{font-size:12px;font-weight:bold;color:#475569;white-space:nowrap}
+.crop-controls input[type=range]{flex:1;min-width:140px;width:auto;accent-color:#2563eb}
+.crop-zoom-btn{width:36px;height:36px;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#172033;font-size:18px;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;transition:all .15s}
+.crop-zoom-btn:hover:not(:disabled){background:#2563eb;color:#fff;border-color:#2563eb}
+.crop-zoom-btn:disabled{opacity:.4;cursor:not-allowed}
+.crop-zoom-label{font-size:12px;font-weight:bold;color:#2563eb;min-width:48px;text-align:center;background:#e8f0ff;padding:6px 8px;border-radius:6px}
+
+.crop-actions{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;border-top:1px solid #e2e8f0;background:#f8fafc}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Photo Crop Modal -->
+<div class="crop-overlay" id="cropOverlay">
+  <div class="crop-modal">
+    <div class="crop-header">
+      <div>
+        <h3>✂️ Crop Student Photo</h3>
+        <div class="crop-sub">Drag to reposition · Use +/− to zoom · Apply to save</div>
+      </div>
+      <button type="button" class="btn btn-light" onclick="closeCropModal()">✕</button>
+    </div>
+
+    <div class="crop-body">
+      <div class="crop-stage" id="cropStage">
+        <canvas id="cropCanvas" class="crop-canvas"></canvas>
+        <div class="crop-frame"></div>
+      </div>
+
+      <div class="crop-controls">
+        <button type="button" class="crop-zoom-btn" id="cropZoomOut" onclick="cropZoomStep(-0.1)" title="Zoom Out">−</button>
+
+        <input type="range" id="cropZoom" min="1" max="5" step="0.01" value="1"
+               oninput="cropSetZoom(this.value)">
+
+        <button type="button" class="crop-zoom-btn" id="cropZoomIn" onclick="cropZoomStep(0.1)" title="Zoom In">＋</button>
+
+        <span class="crop-zoom-label" id="cropZoomLabel">100%</span>
+
+        <button type="button" class="btn btn-light" onclick="cropReset()" title="Reset zoom & position">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="crop-actions">
+      <button type="button" class="btn btn-light" onclick="closeCropModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="applyCrop()">✓ Apply Crop</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ⚠️ REPLACE THIS LINE with your Google Apps Script Web App URL
+   ============================================================ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwynzOIRXs8FakClESf_PMp8_7MhNeM4IUmj_H8_0I7-8tesbCBZqKdrN5KXJM-nPU-/exec';
+
+const DEFAULT_ADMIN_USERNAME = "admin";
+const DEFAULT_ADMIN_PASSWORD = "Admin@123";
+
+let adminCredentials = { username: DEFAULT_ADMIN_USERNAME, password: DEFAULT_ADMIN_PASSWORD };
+
+const defaultForm = {
+  academicYear:"", rollNo:"", enrollmentNo:"", firstName:"", middleName:"", lastName:"",
+  gender:"", studentCategory:"", birthDate:"", studentContact:"", parentsContact:"",
+  motherContact:"", email:"", bloodGroup:"", className:"",
+  currentAddress:"", permanentAddress:"", photo:""
+};
+
+const FIELD_LABELS = {
+  academicYear:"Academic Year", rollNo:"Roll No", enrollmentNo:"Enrollment No",
+  firstName:"First Name", middleName:"Middle Name", lastName:"Last Name",
+  gender:"Gender", studentCategory:"Students Category", birthDate:"Birth Date",
+  studentContact:"Student Contact Number", parentsContact:"Parents Contact Number",
+  motherContact:"Mother's Contact Number", email:"Email", bloodGroup:"Blood Group",
+  className:"Class", currentAddress:"Current Address", permanentAddress:"Permanent Address",
+  photo:"Student Photo"
+};
+
+const CLASSES = ["FYCO1","FYCO2","FYCO3","SYCO1","SYCO2","SYCO3","TYCO1","TYCO2","TYCO3"];
+const CATEGORIES = ["SC","ST","SEBC","Open","OBC","NT1","NT2","NT3","VJNT","Other"];
+const BLOOD_GROUPS = ["A+","A-","B+","B-","AB+","AB-","O+","O-"];
+
+/* Academic Years: 2026-27 → 2050-51 */
+const YEARS = (() => {
+  const arr = [];
+  for (let y = 2026; y <= 2050; y++) {
+    const end = (y + 1) % 100;
+    arr.push(y + "-" + String(end).padStart(2, "0"));
+  }
+  return arr;
+})();
+
+let students = [];
+let dataLoaded = false;
+let session = null;
+let page = "dashboard";
+let loginRole = "student";
+let editIndex = null;
+let toastTimer = null;
+
+/* ============ API ============ */
+async function apiGet(action) {
+  const res = await fetch(SCRIPT_URL + "?action=" + action + "&t=" + Date.now());
+  return await res.json();
+}
+async function apiPost(payload) {
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    console.log("apiPost response:", data);
+    return data;
+  } catch (err) {
+    console.error("apiPost error:", err);
+    try {
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(payload)
+      });
+    } catch (e2) { console.error("Fallback failed:", e2); }
+    return { result: "unknown" };
+  }
+}
+async function loadStudentsFromSheet() {
+  try {
+    const data = await apiGet("getAll");
+    if (data.result === "success" && Array.isArray(data.students)) students = data.students;
+  } catch (e) { console.error("Load students failed:", e); }
+  dataLoaded = true;
+}
+async function loadCredentialsFromSheet() {
+  try {
+    const data = await apiGet("getCredentials");
+    if (data.result === "success" && data.credentials) adminCredentials = data.credentials;
+  } catch (e) { console.error("Load credentials failed:", e); }
+}
+
+/* ============ UTILS ============ */
+function esc(v){return String(v??"").replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[x]))}
+function showToast(msg){clearTimeout(toastTimer);let d=document.createElement("div");d.className="toast";d.textContent=msg;document.body.appendChild(d);toastTimer=setTimeout(()=>d.remove(),2600)}
+function getField(id){return document.getElementById(id)?.value.trim()||""}
+
+function formatDateDMY(v){
+  if(!v) return "";
+  const s = String(v).trim();
+  if(!s) return "";
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return m[3] + "/" + m[2] + "/" + m[1];
+  const d = new Date(s);
+  if(!isNaN(d.getTime())){
+    const dd = String(d.getDate()).padStart(2,"0");
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const yyyy = d.getFullYear();
+    return dd + "/" + mm + "/" + yyyy;
+  }
+  return s;
+}
+
+/* ============ LOGIN ============ */
+function loginScreen(){
+  document.getElementById("root").innerHTML=`
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="brand-logo">JS</div>
+      <h1>Jayawantrao Sawant Polytechnic</h1>
+      <div class="subtitle">Computer Engineering Student Database</div>
+      <div class="role-buttons">
+        <button class="role-btn ${loginRole==="admin"?"active":""}" onclick="setRole('admin')">🔐 Admin</button>
+        <button class="role-btn ${loginRole==="student"?"active":""}" onclick="setRole('student')">📝 Student</button>
+      </div>
+      ${loginRole==="admin"?`
+        <label>Admin Username</label>
+        <input id="username" type="text" autocomplete="off" placeholder="Enter Admin username">
+        <label>Admin Password</label>
+        <input id="password" type="password" autocomplete="off" placeholder="Enter Admin password">
+        <div id="loginError" class="login-error"></div>
+        <button id="loginBtn" class="btn btn-primary" style="width:100%" onclick="login()">Admin Login</button>
+      `:`
+        <div class="student-only-note">Students do not need Admin credentials. Select Student and continue to the Student Form.</div>
+        <label>Enrollment No <span style="color:#d00">*</span></label>
+        <input id="studentIdentity" type="text" placeholder="Enter your Enrollment No" required autocomplete="off">
+        <div id="loginError" class="login-error"></div>
+        <button class="btn btn-success" style="width:100%" onclick="login()">Open Student Form</button>
+      `}
+    </div>
+  </div>`;
+}
+function setRole(role){loginRole=role;loginScreen()}
+
+async function login(){
+  if(loginRole==="admin"){
+    const u=document.getElementById("username").value.trim();
+    const p=document.getElementById("password").value;
+    const btn=document.getElementById("loginBtn");
+    const err=document.getElementById("loginError");
+    btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Checking...'; err.textContent='';
+    await loadCredentialsFromSheet();
+    if(u===adminCredentials.username && p===adminCredentials.password){
+      session={role:"admin"}; page="dashboard";
+      btn.innerHTML='<span class="spinner"></span>Loading data...';
+      await loadStudentsFromSheet(); render(); return;
+    }
+    err.textContent="Invalid Admin username or password.";
+    btn.disabled=false; btn.textContent="Admin Login"; return;
+  }
+  const id=document.getElementById("studentIdentity").value.trim();
+  if(!id){ document.getElementById("loginError").textContent="Enrollment No is mandatory. Please enter your Enrollment No."; return; }
+  session={role:"student",identity:id}; page="studentForm";
+  if(!dataLoaded) await loadStudentsFromSheet();
+  render();
+}
+function logout(){session=null;page="dashboard";loginRole="student";editIndex=null;loginScreen()}
+function render(){ if(!session){loginScreen();return} if(session.role==="admin"){adminApp();return} studentApp(); }
+
+/* ============ ADMIN ============ */
+function adminApp(){
+ if(!dataLoaded){
+   document.getElementById("root").innerHTML='<div class="loading-screen"><span class="spinner" style="border-color:#2563eb66;border-top-color:#2563eb;width:24px;height:24px"></span>&nbsp;Loading data from Google Sheet...</div>';
+   loadStudentsFromSheet().then(()=>{ dataLoaded=true; adminApp(); }); return;
+ }
+ document.getElementById("root").innerHTML=`
+ <div class="app">
+  <aside class="sidebar">
+   <div class="brand"><div class="brand-logo">JS</div><h2>Jayawantrao Sawant Polytechnic</h2><p>Hadapsar, Pune</p></div>
+   <nav class="nav">
+    <button class="${page==="dashboard"?"active":""}" onclick="go('dashboard')"><span class="nav-icon">▦</span>Dashboard</button>
+    <button class="${page==="register"?"active":""}" onclick="go('register')"><span class="nav-icon">＋</span>${editIndex!==null?"Edit Student":"Register Student"}</button>
+    <button class="${page==="database"?"active":""}" onclick="go('database')"><span class="nav-icon">▤</span>Student Database</button>
+    <button onclick="exportCSV()"><span class="nav-icon">⇩</span>Export Excel/CSV</button>
+    <button onclick="downloadTemplate()"><span class="nav-icon">▥</span>Excel Template</button>
+    <button class="${page==="settings"?"active":""}" onclick="go('settings')"><span class="nav-icon">⚙</span>Settings</button>
+    <button class="${page==="changePassword"?"active":""}" onclick="go('changePassword')"><span class="nav-icon">🔑</span>Change Password</button>
+    <button onclick="logout()" style="margin-top:20px;background:#dc2626;color:#fff"><span class="nav-icon">↪</span>Logout</button>
+   </nav>
+  </aside>
+  <main class="main">
+   <header class="topbar">
+    <div class="top-title"><h1>Jayawantrao Sawant Polytechnic, Hadapsar, Pune</h1><p>Computer Engineering Student Database · Google Sheets</p></div>
+    <div class="college-badge">COMP · ADMIN</div>
+   </header>
+   <div class="content">${adminPage()}</div>
+  </main>
+ </div>`;
+ if(page==="register") populateForm();
+}
+function go(p){ if(p!=="register") editIndex=null; page=p; render(); }
+function adminPage(){
+ if(page==="register")return registerPage();
+ if(page==="database")return databasePage();
+ if(page==="settings")return settingsPage();
+ if(page==="changePassword")return changePasswordPage();
+ return dashboardPage();
+}
+function dashboardPage(){
+ const male=students.filter(s=>s.gender==="Male").length;
+ const female=students.filter(s=>s.gender==="Female").length;
+ const email=students.filter(s=>s.email).length;
+ const contact=students.filter(s=>s.studentContact).length;
+ return `<div class="dashboard-grid">
+  ${stat("Total Students",students.length,"👥")}
+  ${stat("Complete Information",students.filter(s=>s.firstName&&s.lastName&&s.email&&s.studentContact).length,"✓")}
+  ${stat("Male Students",male,"♂")}
+  ${stat("Female Students",female,"♀")}
+  ${stat("Students with Email",email,"✉")}
+  ${stat("With Contact Number",contact,"☎")}
+ </div>
+ <div class="card"><div class="card-header"><div><h2>Quick Actions</h2><p>Manage student records efficiently</p></div></div>
+ <div class="card-body"><div class="actions">
+ <button class="btn btn-primary" onclick="editIndex=null;go('register')">＋ Register Student</button>
+ <button class="btn btn-light" onclick="go('database')">▤ View Database</button>
+ <button class="btn btn-success" onclick="exportCSV()">⇩ Export Data</button>
+ <button class="btn btn-light" onclick="refreshData()">🔄 Refresh from Sheet</button>
+ </div></div></div>`;
+}
+function stat(t,v,i){return `<div class="stat-card"><div class="stat-info"><small>${t}</small><strong>${v}</strong></div><div class="stat-icon">${i}</div></div>`}
+function registerPage(){
+ return `<div class="card"><div class="card-header"><div><h2>${editIndex!==null?"Edit Student Record":"Student Registration"}</h2><p>${editIndex!==null?"Modify existing student information.":"Admin can add and manage student records."} All fields are compulsory.</p></div><span class="badge">ADMIN FULL ACCESS</span></div><div class="card-body">${formHTML("admin")}</div></div>`;
+}
+
+/* ============ FORM ============ */
+function formHTML(mode){
+  return `<form onsubmit="submitForm(event,'${mode}')" novalidate>
+  <div id="validationBanner" class="validation-banner"></div>
+  <div class="info-section"><div class="section-title"><div class="section-number">1</div><div>Academic Information</div></div><div class="section-content"><div class="form-grid">
+  ${selectField("Academic Year","academicYear",YEARS)}
+  </div></div></div>
+  <div class="info-section"><div class="section-title"><div class="section-number">2</div><div>Personal Information</div></div><div class="section-content"><div class="form-grid">
+  <div class="field full" data-field="photo">
+    <label>Student Photo <span class="req">*</span></label>
+    <div class="photo-upload">
+      <div class="photo-preview" id="photoPreview" onclick="document.getElementById('f_photo').click()">
+        <div class="placeholder" id="photoPlaceholder">📷</div>
+        <img id="photoImg" src="" alt="Student Photo" style="display:none;">
+        <input type="file" id="f_photo" accept="image/*" onchange="handlePhotoUpload(event)">
+      </div>
+
+      <div class="photo-actions">
+        <button type="button" class="btn btn-primary" onclick="pickPhoto('crop')">✂️ Choose &amp; Crop</button>
+        <button type="button" class="btn btn-success" onclick="pickPhoto('nocrop')">⚡ Choose Without Crop</button>
+        <button type="button" class="btn btn-light" onclick="removePhoto()">Remove</button>
+      </div>
+
+      <div class="photo-hint">
+        JPG / PNG · Max 2 MB · Square output 500×500<br>
+        <b>Crop:</b> open interactive editor · <b>No Crop:</b> auto-square from center
+      </div>
+    </div>
+    <input type="hidden" id="f_photo_data" value="">
+    <input type="hidden" id="photoMode" value="crop">
+  </div>
+  ${field("Roll No","rollNo","text")}
+  ${field("Enrollment No","enrollmentNo","text")}
+  ${field("First Name","firstName","text")}
+  ${field("Middle Name","middleName","text")}
+  ${field("Last Name","lastName","text")}
+  ${selectField("Gender","gender",["Male","Female","Other"])}
+  ${selectField("Students Category","studentCategory",CATEGORIES)}
+  ${field("Birth Date","birthDate","date")}
+  ${selectField("Blood Group","bloodGroup",BLOOD_GROUPS)}
+  ${selectField("Class","className",CLASSES)}
+  </div></div></div>
+  <div class="info-section"><div class="section-title"><div class="section-number">3</div><div>Contact Information</div></div><div class="section-content"><div class="form-grid">
+  ${field("Student Contact Number","studentContact","tel")}
+  ${field("Parents Contact Number","parentsContact","tel")}
+  ${field("Mother's Contact Number","motherContact","tel")}
+  ${field("Email","email","email")}
+  </div></div></div>
+  <div class="info-section"><div class="section-title"><div class="section-number">4</div><div>Address Information</div></div><div class="section-content"><div class="form-grid">
+  ${textareaField("Current Address","currentAddress")}
+  ${textareaField("Permanent Address","permanentAddress")}
+  </div></div></div>
+  <div class="actions">
+  <button class="btn ${editIndex!==null?"btn-warning":"btn-primary"}" type="submit" id="formSubmitBtn">${editIndex!==null?"Update Student Record":"Save Student"}</button>
+  <button class="btn btn-light" type="button" onclick="${mode==="admin"?(editIndex!==null?"cancelEdit()":"go('dashboard')"):"clearStudentForm()"}">${editIndex!==null?"Cancel":"Clear"}</button>
+  </div>
+  </form>`;
+}
+function field(label,id,type){return `<div class="field" data-field="${id}"><label>${label} <span class="req">*</span></label><input id="f_${id}" type="${type}" required></div>`}
+function selectField(label,id,items){return `<div class="field" data-field="${id}"><label>${label} <span class="req">*</span></label><select id="f_${id}" required><option value="">Select ${label}</option>${items.map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div>`}
+function textareaField(label,id){return `<div class="field full" data-field="${id}"><label>${label} <span class="req">*</span></label><textarea id="f_${id}" required></textarea></div>`}
+
+/* ============ PHOTO HANDLING (Crop / No-Crop modes) ============ */
+function pickPhoto(mode){
+  const input = document.getElementById("f_photo");
+  const modeEl = document.getElementById("photoMode");
+  if(modeEl) modeEl.value = mode;
+  input.value = "";        /* allow re-selecting the same file */
+  input.click();
+}
+
+function handlePhotoUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  if(file.size > 2 * 1024 * 1024){
+    alert("Photo size must be less than 2 MB. Please choose a smaller image.");
+    event.target.value = "";
+    return;
+  }
+  if(!file.type.startsWith("image/")){
+    alert("Please select a valid image file (JPG, PNG, etc.).");
+    event.target.value = "";
+    return;
+  }
+
+  const mode = document.getElementById("photoMode")?.value || "crop";
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const dataUrl = e.target.result;
+    if(mode === "nocrop"){
+      autoSquarePhoto(dataUrl);       /* skip crop modal */
+    } else {
+      openCropModal(dataUrl);         /* open crop tool */
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+/* Auto-crop to square without showing the crop modal (fit-to-fill) */
+function autoSquarePhoto(dataUrl){
+  const img = new Image();
+  img.onload = function(){
+    const OUT = 500;
+    const out = document.createElement("canvas");
+    out.width = OUT;
+    out.height = OUT;
+    const ctx = out.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, OUT, OUT);
+
+    const scale = Math.max(OUT / img.width, OUT / img.height);
+    const dispW = img.width * scale;
+    const dispH = img.height * scale;
+    const dx = (OUT - dispW) / 2;
+    const dy = (OUT - dispH) / 2;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, dx, dy, dispW, dispH);
+
+    const croppedDataUrl = out.toDataURL("image/jpeg", 0.9);
+
+    document.getElementById("photoImg").src = croppedDataUrl;
+    document.getElementById("photoImg").style.display = "block";
+    document.getElementById("photoPlaceholder").style.display = "none";
+    document.getElementById("f_photo_data").value = croppedDataUrl;
+
+    showToast("Photo added (auto square).");
+  };
+  img.onerror = function(){
+    alert("Could not load the image. Please try another file.");
+  };
+  img.src = dataUrl;
+}
+
+function removePhoto(){
+  closeCropModal();
+  document.getElementById("f_photo").value = "";
+  document.getElementById("photoImg").src = "";
+  document.getElementById("photoImg").style.display = "none";
+  document.getElementById("photoPlaceholder").style.display = "block";
+  document.getElementById("f_photo_data").value = "";
+}
+
+function resetPhotoUI(){
+  closeCropModal();
+  const modeEl = document.getElementById("photoMode");
+  if(modeEl) modeEl.value = "crop";
+  const fileInput = document.getElementById("f_photo");
+  if(fileInput) fileInput.value = "";
+  const img = document.getElementById("photoImg");
+  if(img){ img.src = ""; img.style.display = "none"; }
+  const ph = document.getElementById("photoPlaceholder");
+  if(ph) ph.style.display = "block";
+  const hidden = document.getElementById("f_photo_data");
+  if(hidden) hidden.value = "";
+}
+
+/* ============ PHOTO CROP MODAL ============ */
+let cropState = {
+  img: null,
+  baseScale: 1,
+  zoom: 1,
+  minZoom: 1,
+  maxZoom: 5,
+  offsetX: 0,
+  offsetY: 0,
+  dragging: false,
+  startX: 0,
+  startY: 0,
+  stageSize: 380
+};
+
+function openCropModal(dataUrl){
+  const img = new Image();
+  img.onload = function(){
+    cropState.img = img;
+    cropState.zoom = 1;
+    cropState.offsetX = 0;
+    cropState.offsetY = 0;
+
+    const stage = document.getElementById("cropStage");
+    const size = stage.clientWidth || 380;
+    cropState.stageSize = size;
+
+    cropState.baseScale = Math.max(size / img.width, size / img.height);
+
+    cropSyncControls();
+    document.getElementById("cropOverlay").classList.add("show");
+
+    setupCropInteraction();
+    drawCrop();
+  };
+  img.onerror = function(){
+    alert("Could not load the image. Please try another file.");
+  };
+  img.src = dataUrl;
+}
+
+function closeCropModal(){
+  document.getElementById("cropOverlay").classList.remove("show");
+  cropState.img = null;
+  cropState.dragging = false;
+}
+
+function cropSetZoom(z){
+  if(!cropState.img) return;
+  z = parseFloat(z);
+  if(isNaN(z)) return;
+  z = Math.max(cropState.minZoom, Math.min(cropState.maxZoom, z));
+  cropState.zoom = z;
+  clampOffset();
+  drawCrop();
+  cropSyncControls();
+}
+
+function cropZoomStep(delta){
+  cropSetZoom(cropState.zoom + delta);
+}
+
+function cropReset(){
+  cropState.zoom = 1;
+  cropState.offsetX = 0;
+  cropState.offsetY = 0;
+  clampOffset();
+  drawCrop();
+  cropSyncControls();
+}
+
+function cropSyncControls(){
+  const slider = document.getElementById("cropZoom");
+  const label  = document.getElementById("cropZoomLabel");
+  const btnOut = document.getElementById("cropZoomOut");
+  const btnIn  = document.getElementById("cropZoomIn");
+
+  if(slider) slider.value = cropState.zoom;
+  if(label)  label.textContent = Math.round(cropState.zoom * 100) + "%";
+  if(btnOut) btnOut.disabled = cropState.zoom <= cropState.minZoom + 0.001;
+  if(btnIn)  btnIn.disabled  = cropState.zoom >= cropState.maxZoom - 0.001;
+}
+
+function setupCropInteraction(){
+  const stage = document.getElementById("cropStage");
+  const fresh = stage.cloneNode(true);
+  stage.parentNode.replaceChild(fresh, stage);
+
+  fresh.addEventListener("pointerdown", (e) => {
+    if(!cropState.img) return;
+    cropState.dragging = true;
+    cropState.startX = e.clientX - cropState.offsetX;
+    cropState.startY = e.clientY - cropState.offsetY;
+    try { fresh.setPointerCapture(e.pointerId); } catch(_) {}
+  });
+
+  fresh.addEventListener("pointermove", (e) => {
+    if(!cropState.dragging) return;
+    cropState.offsetX = e.clientX - cropState.startX;
+    cropState.offsetY = e.clientY - cropState.startY;
+    clampOffset();
+    drawCrop();
+  });
+
+  fresh.addEventListener("pointerup", (e) => {
+    cropState.dragging = false;
+    try { fresh.releasePointerCapture(e.pointerId); } catch(_) {}
+  });
+
+  fresh.addEventListener("pointercancel", () => { cropState.dragging = false; });
+
+  fresh.addEventListener("wheel", (e) => {
+    if(!cropState.img) return;
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+    cropZoomStep(delta);
+  }, { passive: false });
+}
+
+function clampOffset(){
+  if(!cropState.img) return;
+  const size = cropState.stageSize;
+  const scale = cropState.baseScale * cropState.zoom;
+  const dispW = cropState.img.width * scale;
+  const dispH = cropState.img.height * scale;
+  const maxX = Math.max(0, (dispW - size) / 2);
+  const maxY = Math.max(0, (dispH - size) / 2);
+  cropState.offsetX = Math.max(-maxX, Math.min(maxX, cropState.offsetX));
+  cropState.offsetY = Math.max(-maxY, Math.min(maxY, cropState.offsetY));
+}
+
+function drawCrop(){
+  if(!cropState.img) return;
+  const canvas = document.getElementById("cropCanvas");
+  const size = cropState.stageSize;
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = size + "px";
+  canvas.style.height = size + "px";
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, size, size);
+
+  const scale = cropState.baseScale * cropState.zoom;
+  const dispW = cropState.img.width * scale;
+  const dispH = cropState.img.height * scale;
+  const x = (size - dispW) / 2 + cropState.offsetX;
+  const y = (size - dispH) / 2 + cropState.offsetY;
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(cropState.img, x, y, dispW, dispH);
+}
+
+function applyCrop(){
+  if(!cropState.img){ closeCropModal(); return; }
+
+  const size = cropState.stageSize;
+  const frameRatio = 0.48;
+  const cropSize = size * frameRatio;
+  const frameLeft = (size - cropSize) / 2;
+  const frameTop  = (size - cropSize) / 2;
+
+  const scale = cropState.baseScale * cropState.zoom;
+  const dispW = cropState.img.width * scale;
+  const dispH = cropState.img.height * scale;
+  const imgLeft = (size - dispW) / 2 + cropState.offsetX;
+  const imgTop  = (size - dispH) / 2 + cropState.offsetY;
+
+  const sx = (frameLeft - imgLeft) / scale;
+  const sy = (frameTop  - imgTop)  / scale;
+  const sw = cropSize / scale;
+  const sh = cropSize / scale;
+
+  const OUT = 500;
+  const out = document.createElement("canvas");
+  out.width = OUT;
+  out.height = OUT;
+  const octx = out.getContext("2d");
+  octx.fillStyle = "#ffffff";
+  octx.fillRect(0, 0, OUT, OUT);
+
+  try {
+    octx.imageSmoothingEnabled = true;
+    octx.imageSmoothingQuality = "high";
+    octx.drawImage(cropState.img, sx, sy, sw, sh, 0, 0, OUT, OUT);
+  } catch(err){
+    console.error("Crop render failed:", err);
+    alert("Could not crop the image. Please try a different photo.");
+    return;
+  }
+
+  const croppedDataUrl = out.toDataURL("image/jpeg", 0.9);
+
+  document.getElementById("photoImg").src = croppedDataUrl;
+  document.getElementById("photoImg").style.display = "block";
+  document.getElementById("photoPlaceholder").style.display = "none";
+  document.getElementById("f_photo_data").value = croppedDataUrl;
+
+  closeCropModal();
+  showToast("Photo cropped successfully.");
+}
+
+/* ============ FORM POPULATE / READ ============ */
+function populateForm(){
+  if(editIndex===null) return;
+  const s=students[editIndex];
+  if(!s) return;
+  Object.keys(defaultForm).forEach(k=>{
+    if(k === "photo") return;
+    const el=document.getElementById("f_"+k);
+    if(el) el.value=s[k]||"";
+  });
+  if(s.photo){
+    document.getElementById("photoImg").src = s.photo;
+    document.getElementById("photoImg").style.display = "block";
+    document.getElementById("photoPlaceholder").style.display = "none";
+    document.getElementById("f_photo_data").value = s.photo;
+  } else {
+    resetPhotoUI();
+  }
+  clearValidation();
+}
+function cancelEdit(){ editIndex=null; go("database"); }
+function readForm(){
+  let o={};
+  Object.keys(defaultForm).forEach(k=>{
+    if(k === "photo") return;
+    o[k]=getField("f_"+k);
+  });
+  o.photo = document.getElementById("f_photo_data")?.value || "";
+  return o;
+}
+function clearValidation(){
+  const banner = document.getElementById("validationBanner");
+  if (banner) { banner.className = "validation-banner"; banner.innerHTML = ""; }
+  document.querySelectorAll(".field.has-error").forEach(el => el.classList.remove("has-error"));
+}
+
+async function submitForm(e,mode){
+ e.preventDefault();
+ clearValidation();
+ const s = readForm();
+
+ const missing = [];
+ Object.keys(FIELD_LABELS).forEach(k => {
+   if (k === "photo") {
+     if (!s.photo || !s.photo.trim()) missing.push({ key: "photo", label: FIELD_LABELS.photo });
+     return;
+   }
+   if (!s[k] || !String(s[k]).trim()) missing.push({ key: k, label: FIELD_LABELS[k] });
+ });
+ if (missing.length > 0) { showValidationErrors(missing, "Please fill in all required fields:"); return; }
+
+ const errors = [];
+ if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email))
+   errors.push({ key:"email", label:"Email", reason:"Invalid email format (e.g. name@example.com)" });
+ const phoneRegex = /^[0-9+\-\s()]{6,20}$/;
+ if (!phoneRegex.test(s.studentContact)) errors.push({ key:"studentContact", label:"Student Contact Number", reason:"Must be 6–20 digits (+, -, spaces allowed)" });
+ if (!phoneRegex.test(s.parentsContact)) errors.push({ key:"parentsContact", label:"Parents Contact Number", reason:"Must be 6–20 digits (+, -, spaces allowed)" });
+ if (!phoneRegex.test(s.motherContact)) errors.push({ key:"motherContact", label:"Mother's Contact Number", reason:"Must be 6–20 digits (+, -, spaces allowed)" });
+ if (s.birthDate) {
+   const bd = new Date(s.birthDate), today = new Date();
+   if (bd > today) errors.push({ key:"birthDate", label:"Birth Date", reason:"Cannot be a future date" });
+ }
+ if (errors.length > 0) { showValidationErrors(errors, "Please correct the following:"); return; }
+
+ const btn = document.getElementById("formSubmitBtn");
+ if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Saving...'; }
+
+ if(mode==="admin"){
+   if(editIndex!==null){
+     const existing=students[editIndex];
+     s.id=existing.id;
+     const r = await apiPost({ action:"update", ...s });
+     console.log("Update result:", r);
+     showToast("Student record updated successfully.");
+     editIndex=null;
+   }else{
+     s.id=Date.now().toString();
+     const r = await apiPost({ action:"create", ...s });
+     console.log("Create result:", r);
+     showToast("Student registered successfully.");
+   }
+   await new Promise(r=>setTimeout(r,1500));
+   await loadStudentsFromSheet();
+   go("database");
+ }else{
+   const duplicate=students.some(x=>x.rollNo && s.rollNo && String(x.rollNo).toLowerCase()===s.rollNo.toLowerCase());
+   if(duplicate){
+     showValidationErrors([{key:"rollNo",label:"Roll No",reason:"This Roll No already exists. Please contact Admin."}], "Duplicate record:");
+     if(btn){ btn.disabled=false; btn.textContent="Save Student"; }
+     return;
+   }
+   s.id=Date.now().toString();
+   const r = await apiPost({ action:"create", ...s });
+   console.log("Student create result:", r);
+   showToast("Student form submitted successfully.");
+   await new Promise(r=>setTimeout(r,1500));
+   await loadStudentsFromSheet();
+   setTimeout(()=>{ goStudentForm(); },400);
+ }
+}
+
+function showValidationErrors(items, title){
+  const banner = document.getElementById("validationBanner");
+  if (!banner) return;
+  let html = `<strong>⚠️ ${esc(title)}</strong><ul>`;
+  items.forEach(it => {
+    const reason = it.reason ? ` — <em>${esc(it.reason)}</em>` : "";
+    html += `<li><b>${esc(it.label)}</b>${reason}</li>`;
+    const wrap = document.querySelector(`.field[data-field="${it.key}"]`);
+    if (wrap) wrap.classList.add("has-error");
+  });
+  html += `</ul>`;
+  banner.innerHTML = html;
+  banner.className = "validation-banner show";
+  const first = items[0];
+  const el = document.getElementById("f_" + first.key) || document.querySelector(`.field[data-field="${first.key}"]`);
+  if (el) {
+    banner.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(()=> el.focus(), 250);
+  }
+}
+
+function clearStudentForm(){
+  document.querySelectorAll("[id^='f_']").forEach(x=>{ if(x.type !== 'file') x.value=""; });
+  resetPhotoUI();
+  clearValidation();
+}
+function goStudentForm(){page="studentForm";render();}
+
+/* ============ DATABASE ============ */
+function databasePage(){
+ return `<div class="card">
+  <div class="card-header">
+    <div><h2>Student Database</h2><p>Data synced live from Google Sheets. Admin has Edit / Delete access.</p></div>
+  </div>
+  <div class="card-body">
+
+  <div class="print-panel">
+    <div class="pp-title">🖨️ Print Options</div>
+
+    <div class="pp-row" style="margin-bottom:12px;">
+      <div class="pp-group" style="min-width:auto;">
+        <label class="pp-label">Photo in Print</label>
+        <div class="pp-controls">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:normal;cursor:pointer;">
+            <input type="checkbox" id="printWithPhoto" checked style="width:auto;margin:0;">
+            <span>Include Photo Column</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="pp-row">
+
+      <div class="pp-group">
+        <label class="pp-label">Print by Class</label>
+        <div class="pp-controls">
+          <select id="printClass">
+            <option value="">Select Class</option>
+            ${CLASSES.map(c=>`<option>${c}</option>`).join("")}
+          </select>
+          <button class="btn btn-primary" onclick="printByClass()">Print</button>
+        </div>
+      </div>
+
+      <div class="pp-group">
+        <label class="pp-label">Print by Academic Year</label>
+        <div class="pp-controls">
+          <select id="printYear">
+            <option value="">Select Year</option>
+            ${YEARS.map(y=>`<option>${y}</option>`).join("")}
+          </select>
+          <button class="btn btn-primary" onclick="printByYear()">Print</button>
+        </div>
+      </div>
+
+      <div class="pp-group">
+        <label class="pp-label">&nbsp;</label>
+        <button class="btn btn-success" onclick="printDatabase()" style="width:100%;">🖨️ Print All Students</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="search" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <input id="search" placeholder="Search students..." oninput="filterRows()">
+    <button class="btn btn-light" onclick="refreshData()">🔄 Refresh</button>
+    <span class="badge" style="margin-left:auto;">${students.length} record(s)</span>
+  </div>
+
+  <div class="table-wrap"><table class="table" id="studentTable"><thead><tr>
+   <th>Photo</th><th>Academic Year</th><th>Roll No</th><th>Enrollment No</th><th>Name</th><th>Gender</th>
+   <th>Class</th><th>Email</th><th>Contact</th><th>Actions</th>
+  </tr></thead><tbody>${students.length?students.map((s,i)=>`<tr>
+   <td>${s.photo ? `<img src="${esc(s.photo)}" alt="Photo" class="table-photo" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'table-photo\\' style=\\'display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;\\'>N/A</div>')">` : `<div class="table-photo" style="display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">No photo</div>`}</td>
+   <td>${esc(s.academicYear)}</td>
+   <td>${esc(s.rollNo)}</td>
+   <td>${esc(s.enrollmentNo)}</td>
+   <td>${esc([s.firstName,s.middleName,s.lastName].filter(Boolean).join(" "))}</td>
+   <td>${esc(s.gender)}</td>
+   <td>${esc(s.className)}</td>
+   <td>${esc(s.email)}</td>
+   <td>${esc(s.studentContact)}</td>
+   <td style="white-space:nowrap">
+     <button class="btn btn-warning" onclick="editStudent(${i})">✏ Edit</button>
+     <button class="btn btn-primary" onclick="viewStudent(${i})">View</button>
+     <button class="btn btn-danger" onclick="deleteStudent(${i})">Delete</button>
+   </td>
+   </tr>`).join(""):`<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:30px">No student records yet. Click "Register Student" to add the first one.</td></tr>`}</tbody></table></div>
+
+  </div>
+ </div>`;
+}
+function filterRows(){const q=document.getElementById("search").value.toLowerCase();document.querySelectorAll("#studentTable tbody tr").forEach(r=>r.style.display=r.innerText.toLowerCase().includes(q)?"":"none")}
+function editStudent(i){ editIndex=i; page="register"; render(); }
+function viewStudent(i){
+ const s=students[i];
+ if(!s) return;
+ let msg = Object.entries(s)
+   .filter(([k])=>k!=="id" && k!=="photo")
+   .map(([k,v])=>{
+     if(k === "birthDate") return k + ": " + (formatDateDMY(v) || "-");
+     return k + ": " + (v || "-");
+   })
+   .join("\n");
+ msg += s.photo ? "\n\n[Photo attached]" : "\n\n[No photo]";
+ alert(msg || "No information");
+}
+async function deleteStudent(i){
+  const s=students[i];
+  if(!s) return;
+  if(!confirm("Delete this student record?")) return;
+  await apiPost({ action:"delete", id: s.id });
+  students.splice(i,1); render();
+  await new Promise(r=>setTimeout(r,900));
+  await loadStudentsFromSheet(); render();
+  showToast("Student deleted.");
+}
+async function refreshData(){
+  showToast("Refreshing from Google Sheet...");
+  await loadStudentsFromSheet(); render();
+  showToast("Data refreshed.");
+}
+function settingsPage(){
+ return `<div class="card"><div class="card-header"><div><h2>Settings</h2><p>Student database controls</p></div></div><div class="card-body">
+ <p>These controls are available to Admin only.</p>
+ <div class="actions">
+   <button class="btn btn-light" onclick="refreshData()">🔄 Refresh from Google Sheet</button>
+   <button class="btn btn-danger" onclick="resetDatabase()">⚠ Reset All Student Records</button>
+ </div>
+ </div></div>`;
+}
+async function resetDatabase(){
+  if(!confirm("Delete ALL student records from the Google Sheet? This cannot be undone.")) return;
+  await apiPost({ action:"resetAll" });
+  await new Promise(r=>setTimeout(r,900));
+  await loadStudentsFromSheet();
+  showToast("All records deleted.");
+  go("dashboard");
+}
+
+/* ============ CHANGE PASSWORD ============ */
+function changePasswordPage(){
+ return `<div class="card">
+  <div class="card-header"><div><h2>🔑 Change Admin Password</h2><p>Updates the credentials stored in the Google Sheet</p></div><span class="badge">SECURITY</span></div>
+  <div class="card-body">
+   <div style="max-width:500px;">
+    <div id="cpError" style="color:#dc2626;font-size:13px;min-height:22px;margin-bottom:12px;font-weight:bold;"></div>
+    <div id="cpSuccess" style="color:#16a34a;font-size:13px;min-height:22px;margin-bottom:12px;font-weight:bold;"></div>
+    <div class="field" style="margin-bottom:16px;"><label>Current Password</label><input id="cp_current" type="password" placeholder="Enter current password"></div>
+    <div class="field" style="margin-bottom:16px;"><label>New Username (optional)</label><input id="cp_username" type="text" placeholder="Leave blank to keep current username" value="${esc(adminCredentials.username)}"></div>
+    <div class="field" style="margin-bottom:16px;"><label>New Password</label><input id="cp_new" type="password" placeholder="Enter new password"></div>
+    <div class="field" style="margin-bottom:16px;"><label>Confirm New Password</label><input id="cp_confirm" type="password" placeholder="Re-enter new password"></div>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:20px;font-size:12px;color:#475569;">
+     <strong>Password Requirements:</strong>
+     <ul style="margin:6px 0 0 18px;"><li>Minimum 6 characters</li><li>Must include at least one letter and one number</li></ul>
+    </div>
+    <div class="actions">
+     <button class="btn btn-primary" id="cpBtn" onclick="updatePassword()">✓ Update Credentials</button>
+     <button class="btn btn-light" onclick="go('dashboard')">Cancel</button>
+    </div>
+   </div>
+  </div>
+ </div>`;
+}
+async function updatePassword(){
+  const current=document.getElementById("cp_current").value;
+  const newUsername=document.getElementById("cp_username").value.trim();
+  const newPass=document.getElementById("cp_new").value;
+  const confirmPass=document.getElementById("cp_confirm").value;
+  const errEl=document.getElementById("cpError");
+  const sucEl=document.getElementById("cpSuccess");
+  const btn=document.getElementById("cpBtn");
+  errEl.textContent=""; sucEl.textContent="";
+  if(current!==adminCredentials.password){ errEl.textContent="Current password is incorrect."; return; }
+  if(newUsername && newUsername.length<3){ errEl.textContent="Username must be at least 3 characters long."; return; }
+  if(!newPass){ errEl.textContent="New password cannot be empty."; return; }
+  if(newPass.length<6){ errEl.textContent="New password must be at least 6 characters long."; return; }
+  if(!/[a-zA-Z]/.test(newPass) || !/[0-9]/.test(newPass)){ errEl.textContent="New password must contain at least one letter and one number."; return; }
+  if(newPass!==confirmPass){ errEl.textContent="New password and confirm password do not match."; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Updating...';
+  const finalUser = newUsername || adminCredentials.username;
+  await apiPost({ action:"saveCredentials", username: finalUser, password: newPass });
+  adminCredentials.username = finalUser;
+  adminCredentials.password = newPass;
+  sucEl.textContent="Credentials updated successfully!";
+  showToast("Admin credentials updated successfully.");
+  btn.disabled=false; btn.textContent="✓ Update Credentials";
+  document.getElementById("cp_current").value="";
+  document.getElementById("cp_new").value="";
+  document.getElementById("cp_confirm").value="";
+}
+
+/* ============ PRINT ENGINE ============ */
+function printDatabase(){
+  if(!students.length){ alert("No student records available to print."); return; }
+  openPrintWindow(students, "", "Complete Student Database");
+}
+function printByClass(){
+  const cls = document.getElementById("printClass").value;
+  if(!cls){ alert("Please select a class first."); return; }
+  const filtered = students.filter(s => String(s.className || "").toUpperCase() === cls.toUpperCase());
+  if(!filtered.length){ alert("No students found for class: " + cls); return; }
+  openPrintWindow(filtered, "Class - " + cls, "Class-wise Student List");
+}
+function printByYear(){
+  const yr = document.getElementById("printYear").value;
+  if(!yr){ alert("Please select an academic year first."); return; }
+  const filtered = students.filter(s => String(s.academicYear || "") === yr);
+  if(!filtered.length){ alert("No students found for academic year: " + yr); return; }
+  openPrintWindow(filtered, "Year - " + yr, "Year-wise Student List");
+}
+
+function openPrintWindow(list, filterLabel, title){
+  const name = (s) => [s.firstName, s.middleName, s.lastName].filter(Boolean).join(" ");
+  const withPhoto = document.getElementById("printWithPhoto")?.checked ?? true;
+
+  const rows = list.map(s => `
+    <tr>
+      ${withPhoto ? `<td class="photo-cell">${s.photo ? `<img src="${esc(s.photo)}" alt="Photo" class="print-photo" crossorigin="anonymous">` : "—"}</td>` : ""}
+      <td>${esc(s.academicYear)}</td>
+      <td>${esc(s.rollNo)}</td>
+      <td>${esc(s.enrollmentNo)}</td>
+      <td>${esc(name(s))}</td>
+      <td>${esc(s.gender)}</td>
+      <td>${esc(s.studentCategory)}</td>
+      <td>${esc(formatDateDMY(s.birthDate))}</td>
+      <td>${esc(s.className)}</td>
+      <td>${esc(s.studentContact)}</td>
+      <td>${esc(s.parentsContact)}</td>
+      <td>${esc(s.motherContact)}</td>
+      <td>${esc(s.email)}</td>
+      <td>${esc(s.bloodGroup)}</td>
+      <td>${esc(s.currentAddress)}</td>
+      <td>${esc(s.permanentAddress)}</td>
+    </tr>`).join("");
+
+  const headerCells = `
+    ${withPhoto ? `<th>Photo</th>` : ""}
+    <th>Academic Year</th><th>Roll No</th><th>Enrollment No</th><th>Name</th><th>Gender</th>
+    <th>Category</th><th>Birth Date</th><th>Class</th><th>Student Contact</th>
+    <th>Parents Contact</th><th>Mother Contact</th><th>Email</th><th>Blood Group</th>
+    <th>Current Address</th><th>Permanent Address</th>`;
+
+  const filterLine = filterLabel ? filterLabel : "";
+  const photoNote = withPhoto ? "" : " (Without Photo)";
+
+  const printWindow = window.open("", "_blank", "width=1200,height=800");
+  if(!printWindow){ alert("Please allow pop-ups in your browser to print the database."); return; }
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>JSPM Student Database — ${esc(title)}${photoNote}</title>
+      <style>
+        @page{size:A4 landscape;margin:10mm}
+        *{box-sizing:border-box}
+        body{font-family:Arial,Helvetica,sans-serif;color:#000;margin:0;background:#fff}
+        .print-header{text-align:center;margin-bottom:14px;line-height:1.5}
+        .print-header h1{font-size:18px;margin:0;letter-spacing:0.5px;font-weight:bold}
+        .print-header .line2{font-size:13px;margin:0;font-weight:normal}
+        .print-header .line3{font-size:13px;margin:0;font-weight:normal}
+        .print-header .line4{font-size:13px;margin:4px 0 0;font-weight:bold}
+        table{width:100%;border-collapse:collapse;font-size:${withPhoto ? 8 : 8.5}px;margin-top:6px;table-layout:fixed}
+        th,td{border:1px solid #333;padding:4px 3px;text-align:left;vertical-align:top;word-break:break-word}
+        th{font-weight:bold;background:#e5e7eb;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        thead{display:table-header-group}
+        tr{page-break-inside:avoid}
+        .photo-cell{text-align:center;vertical-align:middle;width:55px}
+        .print-photo{width:45px;height:45px;object-fit:cover;border:1px solid #333;border-radius:3px;display:block;margin:auto}
+        .print-footer{margin-top:10px;font-size:9px;display:flex;justify-content:space-between}
+        @media print{
+          th,td,.print-photo{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        }
+      </style>
+    </head>
+    <body>
+      <div class="print-header">
+        <h1>JAYAWANTRAO SAWANT POLYTECHNIC</h1>
+        <p class="line2">Hadapsar, Pune</p>
+        <p class="line3">Computer Engineering</p>
+        ${filterLine ? `<p class="line4">${esc(filterLine)}${photoNote}</p>` : (photoNote ? `<p class="line4">${photoNote.trim()}</p>` : "")}
+      </div>
+
+      <table>
+        <thead>
+          <tr>${headerCells}</tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="print-footer">
+        <span>Printed on: ${new Date().toLocaleString("en-IN")}</span>
+        <span>Total Records: ${list.length}</span>
+      </div>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+
+  if(!withPhoto){
+    setTimeout(() => {
+      try { printWindow.print(); } catch(e){}
+      setTimeout(()=>{ try { printWindow.close(); } catch(e){} }, 500);
+    }, 400);
+    return;
+  }
+
+  const imgs = printWindow.document.querySelectorAll(".print-photo");
+  let loaded = 0;
+  const total = imgs.length;
+  let printed = false;
+  const triggerPrint = () => {
+    if(printed) return;
+    printed = true;
+    try { printWindow.print(); } catch(e){}
+    setTimeout(()=>{ try { printWindow.close(); } catch(e){} }, 500);
+  };
+
+  if(total === 0){
+    setTimeout(triggerPrint, 400);
+  } else {
+    imgs.forEach(img => {
+      if(img.complete && img.naturalWidth > 0){
+        loaded++;
+        if(loaded === total) setTimeout(triggerPrint, 400);
+      } else {
+        img.addEventListener("load", () => {
+          loaded++;
+          if(loaded === total) setTimeout(triggerPrint, 400);
+        });
+        img.addEventListener("error", () => {
+          loaded++;
+          if(loaded === total) setTimeout(triggerPrint, 400);
+        });
+      }
+    });
+    setTimeout(triggerPrint, 12000);
+  }
+}
+
+/* ============ EXPORT / TEMPLATE ============ */
+function exportCSV(){
+ if(!students.length){alert("No student records available.");return}
+ const titleRow=["JAYAWANTRAO SAWANT POLYTECHNIC - COMPUTER ENGINEERING STUDENT DATABASE"];
+ const subTitleRow=["Hadapsar, Pune - Student Database Records"];
+ const headers=Object.keys(defaultForm);
+ const labels=["Academic Year","Roll No","Enrollment No","First Name","Middle Name","Last Name","Gender","Students Category","Birth Date","Student Contact","Parents Contact","Mother Contact","Email","Blood Group","Class","Current Address","Permanent Address","Photo"];
+ const rows=[titleRow,subTitleRow,[],labels,...students.map(s=>
+   headers.map(h => h === "birthDate" ? formatDateDMY(s[h]) : (s[h] || ""))
+ )];
+ const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(new Blob(["\ufeff" + csv],{type:"text/csv;charset=utf-8;"}));
+ a.download="JSPM_Student_Database.csv";
+ a.click();
+}
+function downloadTemplate(){
+ const titleRow=["JAYAWANTRAO SAWANT POLYTECHNIC - COMPUTER ENGINEERING STUDENT DATABASE TEMPLATE"];
+ const labels=["Academic Year","Roll No","Enrollment No","First Name","Middle Name","Last Name","Gender","Students Category","Birth Date","Student Contact","Parents Contact","Mother Contact","Email","Blood Group","Class","Current Address","Permanent Address","Photo (URL or base64)"];
+ const rows=[titleRow, [], labels];
+ const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(new Blob(["\ufeff" + csv],{type:"text/csv;charset=utf-8;"}));
+ a.download="JSPM_Student_Template.csv";
+ a.click();
+}
+
+/* ============ STUDENT APP ============ */
+function studentApp(){
+ document.getElementById("root").innerHTML=`
+ <div class="app">
+  <aside class="sidebar">
+   <div class="brand"><div class="brand-logo">JS</div><h2>Jayawantrao Sawant Polytechnic</h2><p>Hadapsar, Pune</p></div>
+   <nav class="nav">
+    <button class="active" onclick="goStudentForm()"><span class="nav-icon">＋</span>Student Form</button>
+    <button onclick="logout()" style="margin-top:20px;background:#dc2626;color:#fff"><span class="nav-icon">↪</span>Logout</button>
+   </nav>
+  </aside>
+  <main class="main">
+   <header class="topbar"><div class="top-title"><h1>Jayawantrao Sawant Polytechnic, Hadapsar, Pune</h1><p>Computer Engineering Student Database</p></div><div class="college-badge">COMP · STUDENT</div></header>
+   <div class="content">
+    <div class="card"><div class="card-header"><div><h2>Student Registration Form</h2><p>All fields are compulsory. Fill in your information and submit.</p></div><span class="badge">STUDENT</span></div><div class="card-body">
+      <div class="student-only-note">You have access to the form only. Student database, edit, delete, import, export and settings are not available.</div>
+      ${formHTML("student")}
+    </div></div>
+   </div>
+  </main>
+ </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
