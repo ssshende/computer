@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JSPM Activity Report System</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Times New Roman',Georgia,serif;background:#eef2f7;color:#111}
+button,input,textarea,select{font:inherit}
+
+/* ============ LOGIN UI ============ */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#172033 0%,#1e3a8a 100%);padding:20px}
+.login-card{background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:420px;max-width:100%;padding:32px}
+.login-card h1{font-size:20px;margin:0 0 4px;text-align:center;color:#172033;font-family:Arial}
+.login-card .subtitle{text-align:center;color:#64748b;font-size:13px;margin-bottom:22px;font-family:Arial}
+.login-card .brand-logo{width:70px;height:70px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;margin:0 auto 14px;font-family:Arial}
+.login-card label{display:block;font-size:12px;font-weight:bold;color:#334155;margin:12px 0 4px;font-family:Arial}
+.login-card input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#111;font-size:14px;font-family:Arial}
+.login-card input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.15)}
+.login-tabs{display:flex;gap:6px;margin-bottom:16px;background:#f1f5f9;padding:4px;border-radius:9px}
+.login-tabs button{flex:1;padding:9px;border:0;background:transparent;border-radius:6px;font-weight:bold;cursor:pointer;font-size:13px;font-family:Arial;color:#475569;transition:all .2s}
+.login-tabs button.active{background:#fff;color:#2563eb;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+.login-btn{width:100%;padding:12px;border:0;border-radius:7px;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer;font-size:14px;margin-top:16px;font-family:Arial;transition:background .2s}
+.login-btn:hover{background:#1d4ed8}
+.login-error{color:#dc2626;font-size:12px;text-align:center;min-height:18px;margin-top:10px;font-family:Arial}
+
+/* ============ SCREEN UI ============ */
+.app{display:flex;min-height:100vh}
+.sidebar{width:360px;background:#172033;color:#fff;padding:20px;overflow-y:auto;max-height:100vh;position:sticky;top:0}
+.sidebar h2{font-size:15px;margin:0 0 12px;color:#fff;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #334155;padding-bottom:8px}
+.sidebar .user-info{background:#1e293b;border-radius:8px;padding:12px;margin-bottom:16px;font-family:Arial}
+.sidebar .user-info .name{font-size:14px;font-weight:bold;color:#fff}
+.sidebar .user-info .role{font-size:11px;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.sidebar .user-info .logout{font-size:11px;color:#f87171;margin-top:8px;cursor:pointer;text-decoration:underline}
+.sidebar label{display:block;font-size:12px;color:#cbd5e1;margin:10px 0 4px;font-weight:bold;font-family:Arial}
+.sidebar input,.sidebar textarea{width:100%;padding:8px;border:1px solid #475569;border-radius:6px;background:#1e293b;color:#fff;font-size:13px;font-family:Arial,sans-serif}
+.sidebar textarea{min-height:60px;resize:vertical}
+.sidebar button{margin-top:12px;width:100%;padding:11px;border:0;border-radius:7px;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer;font-size:14px;font-family:Arial}
+.sidebar button:hover{background:#1d4ed8}
+.sidebar button.green{background:#16a34a}
+.sidebar button.green:hover{background:#15803d}
+.sidebar button.blue{background:#0891b2}
+.sidebar button.blue:hover{background:#0e7490}
+.sidebar button.gray{background:#475569}
+.sidebar button.gray:hover{background:#334155}
+.sidebar button.small{font-size:11px;padding:6px;margin-top:6px;background:#dc2626}
+.sidebar button.small:hover{background:#b91c1c}
+.sidebar .upload-slot{background:#1e293b;border:1px dashed #475569;border-radius:6px;padding:8px;margin-top:6px;font-size:12px;text-align:center}
+.sidebar .upload-slot input{background:transparent;border:0;color:#94a3b8;padding:4px;font-size:11px}
+.sidebar .logo-preview{background:#1e293b;border:1px solid #475569;border-radius:6px;padding:8px;margin-top:6px;text-align:center}
+.sidebar .logo-preview img{max-width:80px;max-height:80px;object-fit:contain;background:#fff;padding:4px;border-radius:4px}
+.sidebar .po-block{background:#1e293b;border-radius:6px;padding:10px;margin-bottom:10px;border-left:3px solid #60a5fa}
+.sidebar .po-block.pso{border-left-color:#a78bfa}
+.sidebar .po-code{font-size:12px;font-weight:bold;color:#60a5fa;margin:0;font-family:Arial}
+.sidebar .po-block.pso .po-code{color:#a78bfa}
+.sidebar .po-title{font-size:11px;color:#e2e8f0;font-weight:bold;margin:2px 0;font-family:Arial}
+.sidebar .po-desc{font-size:10px;color:#94a3b8;margin:4px 0;font-style:italic;line-height:1.4;font-family:Arial}
+.sidebar .po-block textarea{margin-top:6px;font-size:12px;background:#0f172a;border-color:#334155}
+.sidebar .logo-section{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;margin-bottom:15px}
+.sidebar .logo-section h3{font-size:12px;color:#60a5fa;margin:0 0 8px;font-family:Arial}
+.sidebar .conn-status{font-size:11px;padding:8px;border-radius:6px;margin-top:8px;font-family:Arial;text-align:center;display:none}
+.sidebar .conn-status.ok{display:block;background:#064e3b;color:#a7f3d0;border:1px solid #10b981}
+.sidebar .conn-status.err{display:block;background:#7f1d1d;color:#fecaca;border:1px solid #ef4444}
+
+.main{flex:1;padding:25px;overflow-y:auto}
+.toolbar{background:#fff;padding:14px 20px;border-radius:10px;box-shadow:0 3px 12px #0000000d;margin-bottom:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.toolbar h1{font-size:18px;margin:0;flex:1;font-family:Arial,sans-serif}
+
+/* ============ ADMIN HEADER ============ */
+.admin-header{position:fixed;top:0;left:0;right:0;background:#172033;color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;z-index:100;font-family:Arial;font-size:13px}
+
+/* ============ DASHBOARD ============ */
+.dashboard{padding:25px;max-width:1400px;margin:auto}
+.dashboard h1{font-size:24px;margin:0 0 6px;font-family:Arial;color:#172033}
+.dashboard .subtitle{color:#64748b;font-size:14px;margin-bottom:22px;font-family:Arial}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
+.stat-card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 3px 12px #0000000d;display:flex;justify-content:space-between;align-items:center}
+.stat-card .stat-info small{color:#64748b;font-size:12px;font-family:Arial;text-transform:uppercase;letter-spacing:0.5px}
+.stat-card .stat-info strong{display:block;font-size:28px;margin-top:6px;color:#172033;font-family:Arial}
+.stat-card .stat-icon{width:48px;height:48px;border-radius:10px;background:#e8f0ff;display:flex;align-items:center;justify-content:center;font-size:22px}
+.reports-table{background:#fff;border-radius:12px;box-shadow:0 3px 12px #0000000d;overflow:hidden}
+.reports-table .table-header{padding:18px 22px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.reports-table .table-header h2{margin:0;font-size:17px;font-family:Arial;color:#172033}
+.reports-table .table-header input{padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;width:280px;font-size:13px;font-family:Arial}
+.reports-table table{width:100%;border-collapse:collapse;font-family:Arial}
+.reports-table th,.reports-table td{padding:12px 16px;text-align:left;border-bottom:1px solid #f1f5f9;font-size:13px}
+.reports-table th{background:#f8fafc;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;font-weight:bold}
+.reports-table tr:hover td{background:#f8fafc}
+.reports-table .action-btn{padding:5px 10px;border:0;border-radius:5px;font-size:11px;font-weight:bold;cursor:pointer;margin-right:4px;font-family:Arial}
+.reports-table .view{background:#2563eb;color:#fff}
+.reports-table .edit{background:#f59e0b;color:#fff}
+.reports-table .delete{background:#dc2626;color:#fff}
+.reports-table .print-sm{background:#0891b2;color:#fff}
+.empty-state{text-align:center;padding:60px 20px;color:#94a3b8;font-family:Arial}
+.empty-state .icon{font-size:52px;margin-bottom:12px}
+.empty-state h3{margin:0 0 6px;color:#475569;font-size:16px}
+.empty-state p{margin:0;font-size:13px}
+
+/* ============ REPORT PAGE ============ */
+.report-page{background:#fff;max-width:850px;margin:auto;padding:45px 55px;box-shadow:0 5px 25px #0000001a;font-family:'Times New Roman',serif;color:#000;line-height:1.4}
+.letterhead{display:flex;align-items:center;justify-content:space-between;gap:15px;padding-bottom:12px;border-bottom:3px double #000;margin-bottom:15px}
+.letterhead .logo-box{width:100px;height:100px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.letterhead .logo-box img{max-width:100px;max-height:100px;width:auto;height:auto;object-fit:contain;display:block}
+.letterhead .logo-empty{width:100px;height:100px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;border:1px dashed #cbd5e1;border-radius:6px;text-align:center;font-family:Arial}
+.letterhead .college-info{flex:1;text-align:center;font-family:'Times New Roman',serif;line-height:1.25;padding:0 10px}
+.letterhead .jspm-tag{font-size:13px;font-weight:bold;color:#000;margin:0 0 2px;font-style:italic}
+.letterhead .college-name-single{font-size:19px;font-weight:bold;color:#000;margin:0 0 2px;letter-spacing:0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.letterhead .college-city{font-size:14px;font-weight:bold;color:#000;margin:0 0 4px}
+.letterhead .department{font-size:13px;font-weight:bold;color:#000;margin:0 0 5px}
+.letterhead .report-tag{font-size:12px;font-weight:bold;color:#000;margin:0;letter-spacing:1.5px;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
+.doc-title{text-align:center;font-family:'Times New Roman',serif;font-size:15px;font-weight:bold;text-decoration:underline;text-underline-offset:4px;margin:0 0 12px;color:#000}
+.info-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:12px;border:1px solid #000}
+.info-table td{padding:4px 8px;vertical-align:top;border:1px solid #000;color:#000;line-height:1.3}
+.info-table td:first-child{width:45%;font-weight:bold;background:#f8fafc}
+.info-table td:last-child{width:55%}
+.content-box{border:1px solid #000;border-radius:3px;padding:12px 14px;background:#fff;margin-top:6px}
+.section-title{font-weight:bold;font-size:13.5px;margin:0 0 4px;color:#000}
+.activity-report{font-size:12.5px;text-align:justify;white-space:pre-wrap;color:#000;line-height:1.4;margin:0}
+.po-list{font-size:12.5px;margin:0}
+.po-item{margin-bottom:8px;color:#000;line-height:1.4}
+.po-item:last-child{margin-bottom:0}
+.po-item strong{display:block;margin-bottom:1px}
+.photos-section{margin-top:15px}
+.photos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.photo-frame{width:100%;height:220px;background:#f8fafc;border:2px solid #333;border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:0}
+.photo-frame img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;background:#fff}
+.photo-placeholder{color:#64748b;font-size:13px;text-align:center;font-family:Arial,sans-serif;padding:10px}
+.signature-block{margin-top:80px;display:flex;justify-content:space-between;align-items:flex-start;font-family:'Times New Roman',serif;font-size:15px;color:#000;gap:20px;padding-top:20px}
+.signature-block .sig-col{flex:1;text-align:center;min-width:0;padding-top:20px}
+.signature-block .role{font-weight:bold;font-size:15px;color:#000}
+
+/* ============ MODAL ============ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;display:flex;align-items:flex-start;justify-content:center;padding:30px;overflow-y:auto}
+.modal-content{background:#eef2f7;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.4);max-width:900px;width:100%;position:relative}
+.modal-close{position:absolute;top:12px;right:12px;background:#dc2626;color:#fff;border:0;width:36px;height:36px;border-radius:50%;font-size:18px;font-weight:bold;cursor:pointer;z-index:10;font-family:Arial}
+.modal-actions{background:#fff;padding:14px 20px;border-radius:12px 12px 0 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.modal-actions h3{margin:0;flex:1;font-family:Arial;font-size:15px;color:#172033;min-width:200px}
+.modal-actions button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:pointer;font-size:12px;font-family:Arial}
+.modal-body{padding:20px}
+
+/* ============ PRINT STYLES ============ */
+@media print {
+  @page { size: A4 portrait; margin: 12mm 15mm 12mm 15mm; }
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; font-size: 12pt; }
+  .sidebar, .toolbar, .login-wrap, .dashboard, .admin-header,
+  .modal-actions, .modal-close, .no-print { display: none !important; }
+  button:not(.print-keep) { display: none !important; }
+  .print-area { display: block !important; }
+  .modal-overlay { display: block !important; position: static !important; background: none !important; padding: 0 !important; overflow: visible !important; inset: auto !important; }
+  .modal-content { box-shadow: none !important; border-radius: 0 !important; max-width: 100% !important; width: 100% !important; background: none !important; }
+  .modal-body { padding: 0 !important; }
+  .report-page { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; width: 100% !important; padding: 0 !important; font-size: 11pt; line-height: 1.3; }
+  .letterhead { padding-bottom: 8px; margin-bottom: 10px; gap: 10px; }
+  .letterhead .logo-box, .letterhead .logo-box img { width: 85px; height: 85px; max-width: 85px; max-height: 85px; }
+  .letterhead .jspm-tag { font-size: 10pt; margin-bottom: 1px; }
+  .letterhead .college-name-single { font-size: 15pt; margin-bottom: 1px; }
+  .letterhead .college-city { font-size: 11pt; margin-bottom: 2px; }
+  .letterhead .department { font-size: 10.5pt; margin-bottom: 3px; }
+  .letterhead .report-tag { font-size: 10pt; }
+  .doc-title { font-size: 12pt; margin: 0 0 8px; }
+  .info-table { font-size: 10pt; margin-bottom: 8px; }
+  .info-table td { padding: 3px 6px; line-height: 1.25; }
+  .content-box{border:1px solid #000;padding:8px 10px;background:#fff;margin-top:4px}
+  .section-title{font-size:11pt;margin:0 0 3px}
+  .activity-report{font-size:10.5pt;line-height:1.35;margin:0;text-align:justify}
+  .po-list{font-size:10.5pt;margin:0}
+  .po-item{margin-bottom:4px;line-height:1.35;page-break-inside:avoid}
+  .po-item:last-child{margin-bottom:0}
+  .po-item strong{display:block;margin-bottom:0}
+  .photos-section { page-break-before: always; break-before: page; margin-top: 0; }
+  .photos-grid { gap: 10px; margin-top: 8px; }
+  .photo-frame { height: 78mm; border: 1.5px solid #000; padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; }
+  .photo-frame img { width: 100%; height: 100%; object-fit: contain; max-width: 100%; max-height: 100%; }
+  .signature-block { margin-top: 60px; font-size: 11pt; gap: 15px; padding-top: 20px; }
+  .signature-block .sig-col { padding-top: 15px; }
+  .signature-block .role { font-size: 11pt; }
+  a { color: #000 !important; text-decoration: none !important; }
+  .letterhead, .info-table { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ============================================================
+   ⚠️ REPLACE THIS LINE with your Google Apps Script Web App URL
+   ============================================================ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOCSXRwNaVlm0d20-f7pimDcrHLSiv9CiVZmh3C-tdQuPVXYL0YlUXr0G0qEuXlU_R/exec';
+
+/* ============================================================
+   ROBUST apiGet / apiPost
+   ============================================================ */
+async function apiGet(action, params) {
+  const qs = new URLSearchParams({ action, ...(params || {}) }).toString();
+  const res = await fetch(SCRIPT_URL + "?" + qs + "&t=" + Date.now(), {
+    method: "GET",
+    redirect: "follow"
+  });
+  return await res.json();
+}
+
+async function apiPost(payload) {
+  const body = JSON.stringify(payload);
+
+  /* Attempt 1 — standard fetch (reads JSON if possible) */
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: body,
+      redirect: "follow"
+    });
+    if (res.ok) {
+      const text = await res.text();
+      try { return JSON.parse(text); }
+      catch { /* fall through to attempt 2 */ }
+    }
+  } catch (err) {
+    console.warn("apiPost attempt 1 failed:", err.message);
+  }
+
+  /* Attempt 2 — no-cors fire-and-forget (still reaches server) */
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain" },
+      body: body
+    });
+    return { result: "queued", message: "Sent (no-cors fallback)" };
+  } catch (err2) {
+    console.error("apiPost attempt 2 failed:", err2.message);
+    return { result: "error", message: err2.message };
+  }
+}
+
+// ============================================================
+// DEFAULT LOGO PATHS
+// ============================================================
+const DEFAULT_LEFT_LOGO  = "logo1.png";
+const DEFAULT_RIGHT_LOGO = "logo2.png";
+
+// ============================================================
+// LOGIN CREDENTIALS
+// ============================================================
+const DEFAULT_ADMIN = { username: "admin", password: "admin@123" };
+const DEFAULT_USER  = { username: "user",  password: "user@123"  };
+
+// ============================================================
+// DEFAULT REPORT DATA
+// ============================================================
+const defaultData = {
+  academicYear: "2025-26",
+  program: "Computer Engineering",
+  classDivision: "TYCO1, TYCO3",
+  activity: "Seminar",
+  activityCoordinator: "Mr. S.S. Shende, Ms. S.P. Sarode, Mrs. K.M. Shirole",
+  studentCoordinator: "Mr. Vivek Kalbhore, Ms. Tanvi Lole",
+  expert: "Mr. Pravin Keskar & Mr. Ashish Katkar\nMotivational Speaker, Pune.",
+  subject: "Road Safety Awareness",
+  date: "12/01/2026",
+  beneficiaries: "150",
+  co: "CO-",
+  po: "PO1, PO2, PO3, PO7.",
+  pso: "PSO-",
+  report: `The Computer Engineering Department organized a Guest Lecture on "Road Safety Awareness" to educate students about traffic rules, safe driving practices, and accident prevention.
+
+During the seminar, the speakers provided valuable guidance on:
+
+1. Awareness of Traffic Rules and Road Discipline – Traffic signs, signals, speed limits, and road regulations.
+
+2. Causes of Road Accidents and Safety Measures – Overspeeding, distracted driving, drunken driving, and preventive measures.
+
+3. Importance of Safety Gear and Responsible Driving – Use of helmets, seat belts, and safe driving behavior.
+
+4. Role of Engineers and Youth in Road Safety Awareness – Motivating students to spread road safety awareness in society.`
+};
+
+// ============================================================
+// PO & PSO DEFINITIONS
+// ============================================================
+const PO_PSO_DEFINITIONS = {
+  po1: { code: "PO1", title: "Basic and Discipline Specific Knowledge", desc: "Apply knowledge of basic mathematics, science and engineering fundamentals and engineering specialization to solve the engineering problems." },
+  po2: { code: "PO2", title: "Problem Analysis", desc: "Identify and analyse well-defined engineering problems using codified standard methods." },
+  po3: { code: "PO3", title: "Design / Development of Solutions", desc: "Design solutions for well-defined technical problems and assist with the design of systems components or processes to meet specified needs." },
+  po4: { code: "PO4", title: "Engineering Tools, Experimentation and Testing", desc: "Apply modern engineering tools and appropriate technique to conduct standard tests and measurements." },
+  po5: { code: "PO5", title: "Engineering Practices for Society, Sustainability and Environment", desc: "Apply appropriate technology in context of society, sustainability, environment and ethical practices." },
+  po6: { code: "PO6", title: "Project Management", desc: "Use engineering management principles individually, as a team member or a leader to manage projects and effectively communicate about well-defined engineering activities." },
+  po7: { code: "PO7", title: "Life-long Learning", desc: "Ability to analyse individual needs and engage in updating in the context of technological changes." },
+  pso1: { code: "PSO1", title: "Computer Software and Hardware Usage", desc: "Use state-of-the-art technologies for operation and application of computer software and hardware." },
+  pso2: { code: "PSO2", title: "Computer Engineering Maintenance", desc: "Maintain computer engineering related software and hardware systems." }
+};
+
+const defaultPoData = { po1: "", po2: "", po3: "", po4: "", po5: "", po6: "", po7: "", pso1: "", pso2: "" };
+
+// ============================================================
+// STORAGE HELPERS
+// ============================================================
+const loadReports = () => {
+  try {
+    const raw = localStorage.getItem("jspm_reports");
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+};
+const saveReports = (reports) => {
+  localStorage.setItem("jspm_reports", JSON.stringify(reports));
+};
+
+// ============================================================
+// INFO ROW
+// ============================================================
+function InfoRow({ label, value }) {
+  return (
+    <tr>
+      <td>{label}</td>
+      <td style={{ whiteSpace: "pre-wrap" }}>{value}</td>
+    </tr>
+  );
+}
+
+// ============================================================
+// SIGNATURE BLOCK
+// ============================================================
+function SignatureBlock() {
+  return (
+    <div className="signature-block">
+      <div className="sig-col"><div className="role">Coordinator</div></div>
+      <div className="sig-col"><div className="role">HOD</div></div>
+      <div className="sig-col"><div className="role">Principal</div></div>
+    </div>
+  );
+}
+
+// ============================================================
+// REPORT PAGE
+// ============================================================
+function ReportPage({ data, photos, poData, leftLogo, rightLogo }) {
+  const filledPOs  = Object.entries(PO_PSO_DEFINITIONS).filter(([key]) => key.startsWith("po")  && poData[key]?.trim());
+  const filledPSOs = Object.entries(PO_PSO_DEFINITIONS).filter(([key]) => key.startsWith("pso") && poData[key]?.trim());
+
+  return (
+    <div className="report-page" id="reportPage">
+      <div className="letterhead">
+        <div className="logo-box">
+          {leftLogo ? <img src={leftLogo} alt="Left Logo" /> : <div className="logo-empty">No Logo</div>}
+        </div>
+        <div className="college-info">
+          <p className="jspm-tag">JSPM's</p>
+          <h1 className="college-name-single">Jayawantrao Sawant Polytechnic</h1>
+          <p className="college-city">Hadapsar, Pune</p>
+          <p className="department">Department of Computer Engineering</p>
+          <p className="report-tag">ONE PAGE ACTIVITY REPORT</p>
+        </div>
+        <div className="logo-box">
+          {rightLogo ? <img src={rightLogo} alt="Right Logo" /> : <div className="logo-empty">No Logo</div>}
+        </div>
+      </div>
+
+      <h1 className="doc-title">Activity Report: {data.subject}</h1>
+
+      <table className="info-table">
+        <tbody>
+          <InfoRow label="Academic Year" value={data.academicYear} />
+          <InfoRow label="Name of Program" value={data.program} />
+          <InfoRow label="Class & Division" value={data.classDivision} />
+          <InfoRow label="Name of Activity" value={data.activity} />
+          <InfoRow label="Name of Activity Coordinator" value={data.activityCoordinator} />
+          <InfoRow label="Name of Student Coordinator" value={data.studentCoordinator} />
+          <InfoRow label="Name and Address of Expert/Guest/Industry" value={data.expert} />
+          <InfoRow label="Name of Subject" value={data.subject} />
+          <InfoRow label="Date of Conduction" value={data.date} />
+          <InfoRow label="Total Beneficiaries" value={data.beneficiaries} />
+          <InfoRow label="CO" value={data.co} />
+          <InfoRow label="PO" value={data.po} />
+          <InfoRow label="PSO" value={data.pso} />
+        </tbody>
+      </table>
+
+      <div className="content-box">
+        <div className="section-title">Activity Report:</div>
+        <div className="activity-report">{data.report}</div>
+
+        {filledPOs.length > 0 && (
+          <>
+            <div className="section-title" style={{marginTop:"10px"}}>Program Outcomes (POs)</div>
+            <div className="po-list">
+              {filledPOs.map(([key, item]) => (
+                <div className="po-item" key={key}>
+                  <strong>{item.code} – {item.title}</strong>
+                  {poData[key]}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {filledPSOs.length > 0 && (
+          <>
+            <div className="section-title" style={{marginTop:"10px"}}>Program Specific Outcomes (PSOs)</div>
+            <div className="po-list">
+              {filledPSOs.map(([key, item]) => (
+                <div className="po-item" key={key}>
+                  <strong>{item.code} – {item.title}</strong>
+                  {poData[key]}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="photos-section">
+        <div className="section-title">Photos:</div>
+        <div className="photos-grid">
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} className="photo-frame">
+              {photos[i] ? <img src={photos[i]} alt={`Photo ${i + 1}`} /> : <div className="photo-placeholder">Photo {i + 1}</div>}
+            </div>
+          ))}
+        </div>
+        <SignatureBlock />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// LOGIN SCREEN
+// ============================================================
+function LoginScreen({ onLogin }) {
+  const [mode, setMode] = useState("admin");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+    if (!username.trim() || !password.trim()) { setError("Please enter both username and password."); return; }
+    if (mode === "admin") {
+      if (username === DEFAULT_ADMIN.username && password === DEFAULT_ADMIN.password) onLogin({ role: "admin", name: "Administrator", username });
+      else setError("Invalid admin credentials.");
+    } else {
+      if (username === DEFAULT_USER.username && password === DEFAULT_USER.password) onLogin({ role: "user", name: username, username });
+      else setError("Invalid user credentials.");
+    }
+  };
+
+  return (
+    <div className="login-wrap">
+      <form className="login-card" onSubmit={handleSubmit}>
+        <div className="brand-logo">JSPM</div>
+        <h1>Activity Report System</h1>
+        <div className="subtitle">Jayawantrao Sawant Polytechnic</div>
+        <div className="login-tabs">
+          <button type="button" className={mode === "admin" ? "active" : ""} onClick={() => { setMode("admin"); setError(""); }}>🔐 Admin</button>
+          <button type="button" className={mode === "user" ? "active" : ""} onClick={() => { setMode("user"); setError(""); }}>👤 User</button>
+        </div>
+        <label>Username</label>
+        <input value={username} onChange={e => setUsername(e.target.value)} placeholder={mode === "admin" ? "Enter admin username" : "Enter user username"} autoComplete="username" />
+        <label>Password</label>
+        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" autoComplete="current-password" />
+        <div className="login-error">{error}</div>
+        <button type="submit" className="login-btn">{mode === "admin" ? "Login as Admin" : "Login as User"}</button>
+      </form>
+    </div>
+  );
+}
+
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
+function AdminDashboard({ reports, onView, onEdit, onDelete, onNew, onRefresh, onImport }) {
+  const [search, setSearch] = useState("");
+
+  const filtered = reports.filter(r =>
+    (r.data.subject || "").toLowerCase().includes(search.toLowerCase()) ||
+    (r.data.program || "").toLowerCase().includes(search.toLowerCase()) ||
+    (r.data.activity || "").toLowerCase().includes(search.toLowerCase()) ||
+    (r.createdBy || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalReports = reports.length;
+  const today = new Date().toISOString().slice(0,10);
+  const todayCount = reports.filter(r => r.createdAt && r.createdAt.slice(0,10) === today).length;
+  const uniqueSubjects = new Set(reports.map(r => r.data.subject)).size;
+  const withPhotos = reports.filter(r => (r.photos || []).some(p => p)).length;
+
+  return (
+    <div className="dashboard">
+      <h1>📊 Admin Dashboard</h1>
+      <div className="subtitle">Manage all submitted activity reports</div>
+
+      <div className="stats-grid">
+        <div className="stat-card"><div className="stat-info"><small>Total Reports</small><strong>{totalReports}</strong></div><div className="stat-icon">📄</div></div>
+        <div className="stat-card"><div className="stat-info"><small>Today</small><strong>{todayCount}</strong></div><div className="stat-icon">📅</div></div>
+        <div className="stat-card"><div className="stat-info"><small>Unique Subjects</small><strong>{uniqueSubjects}</strong></div><div className="stat-icon">📚</div></div>
+        <div className="stat-card"><div className="stat-info"><small>With Photos</small><strong>{withPhotos}</strong></div><div className="stat-icon">🖼️</div></div>
+      </div>
+
+      <div className="reports-table">
+        <div className="table-header">
+          <h2>📋 All Reports</h2>
+          <div style={{display:"flex",gap:"8px",alignItems:"center",flexWrap:"wrap"}}>
+            <input placeholder="Search by subject, program, user..." value={search} onChange={e => setSearch(e.target.value)} />
+            <button className="action-btn view" style={{padding:"8px 14px",fontSize:"12px"}} onClick={onNew}>+ New Report</button>
+            <button className="action-btn print-sm" style={{padding:"8px 14px",fontSize:"12px"}} onClick={onRefresh}>↻ Refresh</button>
+            <button className="action-btn edit" style={{padding:"8px 14px",fontSize:"12px"}} onClick={onImport}>📥 Import from Drive</button>
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="icon">📭</div>
+            <h3>No reports yet</h3>
+            <p>Reports created by users will appear here.</p>
+          </div>
+        ) : (
+          <div style={{overflowX:"auto"}}>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th><th>Subject</th><th>Program</th><th>Activity</th>
+                  <th>Date</th><th>Created By</th><th>Created At</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((r, i) => (
+                  <tr key={r.id}>
+                    <td>{i + 1}</td>
+                    <td><strong>{r.data.subject || "—"}</strong></td>
+                    <td>{r.data.program || "—"}</td>
+                    <td>{r.data.activity || "—"}</td>
+                    <td>{r.data.date || "—"}</td>
+                    <td>{r.createdBy || "—"}</td>
+                    <td>{r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}</td>
+                    <td>
+                      <button className="action-btn view" onClick={() => onView(r)}>👁 View</button>
+                      <button className="action-btn edit" onClick={() => onEdit(r)}>✏ Edit</button>
+                      <button className="action-btn delete" onClick={() => onDelete(r)}>🗑 Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// WORD EXPORT (immediate download)
+// ============================================================
+function exportToWord(reportEl, subject) {
+  const html = buildWordHtml(reportEl);
+  const blob = new Blob(['\ufeff', html], { type: "application/msword" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Activity_Report_${subject.replace(/\s+/g, '_')}.doc`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ============================================================
+// BUILD WORD-COMPATIBLE HTML
+// ============================================================
+function buildWordHtml(reportEl) {
+  if (!reportEl) return "";
+  const clone = reportEl.cloneNode(true);
+
+  const letterhead = clone.querySelector(".letterhead");
+  if (letterhead) {
+    const leftBox  = letterhead.querySelector(".logo-box:first-child")?.innerHTML || "";
+    const rightBox = letterhead.querySelector(".logo-box:last-child")?.innerHTML || "";
+    const info     = letterhead.querySelector(".college-info")?.innerHTML || "";
+    letterhead.innerHTML = `<table style="width:100%;border-collapse:collapse"><tr><td style="width:100px;text-align:center;vertical-align:middle">${leftBox}</td><td style="text-align:center;vertical-align:middle;padding:0 12px">${info}</td><td style="width:100px;text-align:center;vertical-align:middle">${rightBox}</td></tr></table>`;
+  }
+
+  clone.querySelectorAll(".photo-frame").forEach((frame, index) => {
+    const img = frame.querySelector("img");
+    if (img && img.src && img.src.startsWith("data:")) {
+      frame.innerHTML = `<img src="${img.src}" width="320" height="300" style="width:320px;height:300px;border:1px solid #000;" />`;
+      frame.setAttribute("style", "width:340px;height:320px;text-align:center;vertical-align:middle;border:1px solid #000;padding:0;margin:8px;display:inline-block;");
+    } else {
+      frame.innerHTML = `<span style="font-size:11pt;color:#666;">Photo ${index + 1}</span>`;
+      frame.setAttribute("style", "width:340px;height:320px;text-align:center;vertical-align:middle;border:1px solid #000;padding:0;margin:8px;display:inline-block;");
+    }
+  });
+
+  const photosGrid = clone.querySelector(".photos-grid");
+  if (photosGrid) photosGrid.setAttribute("style", "width:100%;text-align:center;margin-top:10px;");
+
+  const sigBlock = clone.querySelector(".signature-block");
+  if (sigBlock) {
+    sigBlock.innerHTML = `<table style="width:100%;border-collapse:collapse;margin-top:60px"><tr><td style="width:33.33%;text-align:center;vertical-align:top;font-size:11pt;padding:20px 10px 0 10px"><b>Coordinator</b></td><td style="width:33.33%;text-align:center;vertical-align:top;font-size:11pt;padding:20px 10px 0 10px"><b>HOD</b></td><td style="width:33.33%;text-align:center;vertical-align:top;font-size:11pt;padding:20px 10px 0 10px"><b>Principal</b></td></tr></table>`;
+  }
+
+  const content = clone.innerHTML;
+
+  return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Activity Report</title>
+  <style>
+    @page { size: 21cm 29.7cm; margin: 1.2cm 1.5cm 1.2cm 1.5cm; mso-page-orientation: portrait; }
+    body { font-family: 'Times New Roman', serif; font-size: 10.5pt; line-height: 1.35; color: #000; margin:0; padding:0; }
+    .letterhead { border-bottom: 3px double #000; padding-bottom: 8px; margin-bottom: 10px; }
+    .letterhead table { width: 100%; border-collapse: collapse; }
+    .letterhead td { vertical-align: middle; }
+    .letterhead .logo-box img { max-width: 85px; max-height: 85px; }
+    .letterhead .jspm-tag { font-size: 10pt; font-weight: bold; margin: 0 0 1px; font-style: italic; text-align: center; }
+    .letterhead .college-name-single { font-size: 15pt; font-weight: bold; margin: 0 0 1px; text-align: center; }
+    .letterhead .college-city { font-size: 11pt; font-weight: bold; margin: 0 0 2px; text-align: center; }
+    .letterhead .department { font-size: 10.5pt; font-weight: bold; margin: 0 0 3px; text-align: center; }
+    .letterhead .report-tag { font-size: 10pt; font-weight: bold; margin: 0; text-align: center; text-transform: uppercase; text-decoration: underline; }
+    h1.doc-title { text-align: center; font-size: 12pt; font-weight: bold; text-decoration: underline; margin: 0 0 8px; }
+    .info-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 8px; border: 1px solid #000; }
+    .info-table td { padding: 3px 6px; vertical-align: top; border: 1px solid #000; line-height: 1.25; }
+    .info-table td:first-child { font-weight: bold; width: 45%; background: #f8fafc; }
+    .info-table td:last-child { width: 55%; }
+    .content-box{border:1px solid #000;padding:8px 10px;margin-top:4px}
+    .section-title{font-weight:bold;font-size:11pt;margin:0 0 3px}
+    .activity-report{font-size:10.5pt;text-align:justify;white-space:pre-wrap;line-height:1.35;margin:0}
+    .po-list{font-size:10.5pt;margin:0}
+    .po-item{margin-bottom:4px;line-height:1.35}
+    .po-item:last-child{margin-bottom:0}
+    .po-item strong{display:block;margin-bottom:0}
+    .photos-section { page-break-before: always; }
+    .photos-grid { width: 100%; text-align: center; margin-top: 10px; }
+    .photo-frame { width: 340px; height: 320px; text-align: center; vertical-align: middle; border: 1px solid #000; padding: 0; margin: 8px; display: inline-block; }
+    .photo-frame img { width: 320px; height: 300px; }
+    .signature-block { margin-top: 60px; width: 100%; padding-top: 20px; }
+    .signature-block table { width: 100%; border-collapse: collapse; }
+    .signature-block td { width: 33.33%; text-align: center; vertical-align: top; font-size: 11pt; padding: 20px 10px 0 10px; }
+    .signature-block .role { font-weight: bold; font-size: 11pt; }
+  </style></head><body>${content}</body></html>`;
+}
+
+// ============================================================
+// REPORT EDITOR
+// ============================================================
+function ReportEditor({ session, onLogout, initialData, initialPhotos, initialPoData, onSave, initialDriveId }) {
+  const [data, setData] = useState(initialData || defaultData);
+  const [photos, setPhotos] = useState(initialPhotos || [null, null, null, null]);
+  const [poData, setPoData] = useState(initialPoData || defaultPoData);
+  const [leftLogo, setLeftLogo] = useState(DEFAULT_LEFT_LOGO);
+  const [rightLogo, setRightLogo] = useState(DEFAULT_RIGHT_LOGO);
+  const [leftCustom, setLeftCustom] = useState(false);
+  const [rightCustom, setRightCustom] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savingToDrive, setSavingToDrive] = useState(false);
+  const [connStatus, setConnStatus] = useState("");
+  const printAreaRef = useRef(null);
+
+  const update = (key, val) => setData(prev => ({ ...prev, [key]: val }));
+  const updatePO = (key, val) => setPoData(prev => ({ ...prev, [key]: val }));
+
+  const handlePhoto = (index, file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { const copy = [...photos]; copy[index] = e.target.result; setPhotos(copy); };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoUpload = (side, file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      if (side === "left") { setLeftLogo(e.target.result); setLeftCustom(true); }
+      else { setRightLogo(e.target.result); setRightCustom(true); }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const resetLeftLogo = () => { setLeftLogo(DEFAULT_LEFT_LOGO); setLeftCustom(false); };
+  const resetRightLogo = () => { setRightLogo(DEFAULT_RIGHT_LOGO); setRightCustom(false); };
+
+  const handleReset = () => {
+    if (!confirm("Clear all form data?")) return;
+    setData(defaultData);
+    setPhotos([null, null, null, null]);
+    setPoData(defaultPoData);
+    setLeftLogo(DEFAULT_LEFT_LOGO);
+    setRightLogo(DEFAULT_RIGHT_LOGO);
+    setLeftCustom(false);
+    setRightCustom(false);
+  };
+
+  const testConnection = async () => {
+    setConnStatus("Testing...");
+    try {
+      const r = await apiGet("ping");
+      if (r && r.result === "success") setConnStatus("✅ Connected: " + r.message);
+      else setConnStatus("⚠ " + (r.message || "unknown response"));
+    } catch (e) {
+      setConnStatus("❌ " + e.message);
+    }
+    setTimeout(() => setConnStatus(""), 5000);
+  };
+
+  const handleSaveReport = async () => {
+    if (!data.subject.trim()) { alert("Please enter Name of Subject."); return; }
+
+    /* 1) Local save */
+    onSave({ data, photos, poData, leftLogo, rightLogo, createdBy: session.name || session.username });
+
+    /* 2) Push to Drive */
+    setSavingToDrive(true);
+    try {
+      const html = buildWordHtml(printAreaRef.current);
+      const reportId = initialDriveId || ("rpt_" + Date.now() + "_" + Math.random().toString(36).slice(2,7));
+
+      const payload = {
+        action: "saveReport",
+        id: reportId,
+        subject: data.subject,
+        createdBy: session.name || session.username,
+        wordHtml: html,
+        pdfHtml: html,
+        photosBase64: photos.filter(Boolean)
+      };
+
+      const r = await apiPost(payload);
+
+      /* Case A — full success */
+      if (r && r.result === "success") {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+        alert(
+          "✓ Report saved locally and to Google Drive.\n\n" +
+          "Word: " + r.wordUrl + "\n" +
+          "PDF: " + (r.pdfUrl || "(PDF generation failed)") + "\n" +
+          "Photos: " + r.photosCount
+        );
+        return;
+      }
+
+      /* Case B — no-cors fallback: verify by re-listing */
+      if (r && (r.result === "queued" || r.result === "unknown")) {
+        await new Promise(res => setTimeout(res, 2500));
+        try {
+          const check = await apiGet("listFolders");
+          if (check.result === "success") {
+            const found = check.folders.find(f => f.name.startsWith(data.subject.substring(0, 60)));
+            if (found) {
+              setSaved(true);
+              setTimeout(() => setSaved(false), 2500);
+              alert(
+                "✓ Report saved to Google Drive.\n\n" +
+                "Folder: " + found.name + "\n" +
+                "Word: " + (found.wordUrl || "(pending)") + "\n" +
+                "PDF: " + (found.pdfUrl || "(pending)") + "\n" +
+                "Photos: " + (found.photosCount || 0)
+              );
+              return;
+            }
+          }
+        } catch (e) { console.warn("Verification failed:", e); }
+
+        alert("⚠ Save was sent but could not be verified.\n\nPlease check Drive folder 'JSPM_Activity_Reports' manually.");
+        return;
+      }
+
+      /* Case C — explicit error */
+      alert("⚠ Saved locally. Drive upload failed: " + (r.message || "unknown"));
+    } catch (err) {
+      console.error(err);
+      alert(
+        "⚠ Saved locally. Drive upload failed: " + err.message + "\n\n" +
+        "Check that:\n" +
+        "1. SCRIPT_URL is your real /exec URL\n" +
+        "2. Apps Script is deployed with 'Who has access: Anyone'\n" +
+        "3. Test in browser: <SCRIPT_URL>?action=ping"
+      );
+    } finally {
+      setSavingToDrive(false);
+    }
+  };
+
+  const handlePrint = () => {
+    const originalTitle = document.title;
+    document.title = `Activity_Report_${data.subject.replace(/\s+/g,"_")}`;
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => { document.title = originalTitle; }, 1500);
+    }, 150);
+  };
+
+  const handlePDF = handlePrint;
+
+  const handleWord = () => {
+    if (printAreaRef.current) exportToWord(printAreaRef.current, data.subject);
+  };
+
+  return (
+    <div className="app">
+      <aside className="sidebar">
+        <div className="user-info">
+          <div className="name">👤 {session.name || session.username}</div>
+          <div className="role">{session.role === "admin" ? "Administrator" : "User"}</div>
+          <div className="logout" onClick={onLogout}>Logout</div>
+        </div>
+
+        <button className="green" onClick={handleSaveReport} disabled={savingToDrive}>
+          {savingToDrive ? "⏳ Saving to Drive..." : "💾 Save Report"}
+        </button>
+        {saved && <div style={{color:"#4ade80",fontSize:"12px",marginTop:"6px",textAlign:"center",fontFamily:"Arial"}}>✓ Report saved!</div>}
+
+        <button className="gray" onClick={testConnection}>🔌 Test Connection</button>
+        {connStatus && (
+          <div className={`conn-status ${connStatus.startsWith("✅") ? "ok" : connStatus.startsWith("❌") ? "err" : ""}`}
+               style={!connStatus.startsWith("✅") && !connStatus.startsWith("❌") ? {display:"block",background:"#334155",color:"#cbd5e1",border:"1px solid #475569"} : {}}>
+            {connStatus}
+          </div>
+        )}
+
+        <h2 style={{ marginTop: "20px" }}>🏫 Letterhead Logos</h2>
+
+        <div className="logo-section">
+          <h3>◀ LEFT SIDE LOGO</h3>
+          {leftLogo && <div className="logo-preview"><img src={leftLogo} alt="Left logo"
+            onError={(e) => { e.target.src = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="3"/><text x="40" y="42" font-size="9" text-anchor="middle" fill="#64748b">logo1.png</text></svg>'); }} /></div>}
+          <div className="upload-slot"><input type="file" accept="image/*" onChange={e => handleLogoUpload("left", e.target.files[0])} /></div>
+          {leftCustom && <button className="small" onClick={resetLeftLogo}>↻ Restore Default Left Logo</button>}
+        </div>
+
+        <div className="logo-section">
+          <h3>▶ RIGHT SIDE LOGO</h3>
+          {rightLogo && <div className="logo-preview"><img src={rightLogo} alt="Right logo"
+            onError={(e) => { e.target.src = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="3"/><text x="40" y="42" font-size="9" text-anchor="middle" fill="#64748b">logo2.png</text></svg>'); }} /></div>}
+          <div className="upload-slot"><input type="file" accept="image/*" onChange={e => handleLogoUpload("right", e.target.files[0])} /></div>
+          {rightCustom && <button className="small" onClick={resetRightLogo}>↻ Restore Default Right Logo</button>}
+        </div>
+
+        <h2 style={{ marginTop: "20px" }}>📝 Report Details</h2>
+        <label>Academic Year</label><input value={data.academicYear} onChange={e => update("academicYear", e.target.value)} />
+        <label>Name of Program</label><input value={data.program} onChange={e => update("program", e.target.value)} />
+        <label>Class & Division</label><input value={data.classDivision} onChange={e => update("classDivision", e.target.value)} />
+        <label>Name of Activity</label><input value={data.activity} onChange={e => update("activity", e.target.value)} />
+        <label>Activity Coordinator</label><input value={data.activityCoordinator} onChange={e => update("activityCoordinator", e.target.value)} />
+        <label>Student Coordinator</label><input value={data.studentCoordinator} onChange={e => update("studentCoordinator", e.target.value)} />
+        <label>Expert / Guest / Industry</label><textarea value={data.expert} onChange={e => update("expert", e.target.value)} />
+        <label>Name of Subject</label><input value={data.subject} onChange={e => update("subject", e.target.value)} />
+        <label>Date of Conduction</label><input value={data.date} onChange={e => update("date", e.target.value)} />
+        <label>Total Beneficiaries</label><input value={data.beneficiaries} onChange={e => update("beneficiaries", e.target.value)} />
+        <label>CO</label><input value={data.co} onChange={e => update("co", e.target.value)} />
+        <label>PO</label><input value={data.po} onChange={e => update("po", e.target.value)} />
+        <label>PSO</label><input value={data.pso} onChange={e => update("pso", e.target.value)} />
+        <label>Activity Report</label><textarea rows="8" value={data.report} onChange={e => update("report", e.target.value)} />
+
+        <h2 style={{ marginTop: "25px" }}>🎯 PO & PSO Explanations</h2>
+        <p style={{ fontSize: "11px", color: "#94a3b8", margin: "4px 0 12px", fontFamily:"Arial" }}>
+          Fill explanation only for POs/PSOs addressed. <strong>Blank ones won't appear.</strong>
+        </p>
+        <h3 style={{ color: "#60a5fa", fontSize: "13px", margin: "15px 0 8px", fontFamily: "Arial" }}>Program Outcomes (POs)</h3>
+        {Object.entries(PO_PSO_DEFINITIONS).filter(([key]) => key.startsWith("po")).map(([key, item]) => (
+          <div key={key} className="po-block">
+            <p className="po-code">{item.code}</p>
+            <p className="po-title">{item.title}</p>
+            <p className="po-desc">{item.desc}</p>
+            <textarea placeholder={`Explain how ${item.code} was achieved...`} value={poData[key]} onChange={e => updatePO(key, e.target.value)} rows="2" />
+          </div>
+        ))}
+        <h3 style={{ color: "#a78bfa", fontSize: "13px", margin: "15px 0 8px", fontFamily: "Arial" }}>Program Specific Outcomes (PSOs)</h3>
+        {Object.entries(PO_PSO_DEFINITIONS).filter(([key]) => key.startsWith("pso")).map(([key, item]) => (
+          <div key={key} className="po-block pso">
+            <p className="po-code">{item.code}</p>
+            <p className="po-title">{item.title}</p>
+            <p className="po-desc">{item.desc}</p>
+            <textarea placeholder={`Explain how ${item.code} was achieved...`} value={poData[key]} onChange={e => updatePO(key, e.target.value)} rows="2" />
+          </div>
+        ))}
+
+        <h2 style={{ marginTop: "25px" }}>📷 Photos (4)</h2>
+        {[0, 1, 2, 3].map(i => (
+          <div key={i}>
+            <label>Photo {i + 1}</label>
+            <div className="upload-slot"><input type="file" accept="image/*" onChange={e => handlePhoto(i, e.target.files[0])} /></div>
+          </div>
+        ))}
+
+        <button onClick={handlePrint}>🖨️ Print Report</button>
+        <button className="green" onClick={handleWord}>📄 Download as Word (.doc)</button>
+        <button className="blue" onClick={handlePDF}>📕 Download as PDF</button>
+        <button className="gray" onClick={handleReset}>♻️ Reset Form</button>
+      </aside>
+
+      <main className="main">
+        <div className="toolbar no-print">
+          <h1>📘 Activity Report Preview</h1>
+        </div>
+        <div className="print-area" ref={printAreaRef}>
+          <ReportPage data={data} photos={photos} poData={poData} leftLogo={leftLogo} rightLogo={rightLogo} />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ============================================================
+// VIEW REPORT MODAL
+// ============================================================
+function ViewReportModal({ report, onClose }) {
+  const printRef = useRef(null);
+
+  const handlePrint = () => {
+    const originalTitle = document.title;
+    document.title = `Activity_Report_${report.data.subject.replace(/\s+/g,"_")}`;
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => { document.title = originalTitle; }, 1500);
+    }, 150);
+  };
+
+  const handlePDF = handlePrint;
+
+  const handleWord = () => {
+    if (printRef.current) exportToWord(printRef.current, report.data.subject);
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <button className="modal-close no-print" onClick={onClose}>✕</button>
+        <div className="modal-actions no-print">
+          <h3>📄 {report.data.subject || "Activity Report"}</h3>
+          <button style={{background:"#2563eb",color:"#fff"}} onClick={handlePrint}>🖨 Print</button>
+          <button style={{background:"#dc2626",color:"#fff"}} onClick={handlePDF}>📕 Save PDF</button>
+          <button style={{background:"#16a34a",color:"#fff"}} onClick={handleWord}>📄 Save Word</button>
+        </div>
+        <div className="modal-body">
+          <div className="print-area" ref={printRef}>
+            <ReportPage
+              data={report.data}
+              photos={report.photos}
+              poData={report.poData}
+              leftLogo={report.leftLogo || DEFAULT_LEFT_LOGO}
+              rightLogo={report.rightLogo || DEFAULT_RIGHT_LOGO}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// DRIVE IMPORT MODAL
+// ============================================================
+function DriveImportModal({ onClose, onImported }) {
+  const [folders, setFolders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await apiGet("listFolders");
+        if (r.result === "success") setFolders(r.folders || []);
+        else setError(r.message || "Failed to load folders");
+      } catch (e) { setError(e.message); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const filtered = folders.filter(f =>
+    (f.name || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleImport = async (folder) => {
+    try {
+      const r = await apiPost({ action: "importReport", folderId: folder.id });
+      if (r.result === "success") {
+        onImported({
+          folderId: folder.id,
+          name: folder.name,
+          bodyHtml: r.bodyHtml,
+          subject: r.subject,
+          wordUrl: folder.wordUrl,
+          pdfUrl: folder.pdfUrl
+        });
+      } else {
+        alert("Import failed: " + (r.message || "unknown"));
+      }
+    } catch (err) {
+      alert("Import failed: " + err.message);
+    }
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{maxWidth:"800px"}}>
+        <button className="modal-close no-print" onClick={onClose}>✕</button>
+        <div className="modal-actions no-print">
+          <h3>📥 Import Report from Google Drive</h3>
+          <input type="text" placeholder="Search folders..." value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{padding:"8px 12px",border:"1px solid #cbd5e1",borderRadius:"6px",fontSize:"13px",width:"220px"}} />
+        </div>
+        <div className="modal-body" style={{background:"#fff",minHeight:"300px"}}>
+          {loading && <p style={{textAlign:"center",color:"#64748b"}}>Loading folders from Google Drive...</p>}
+          {error && <p style={{color:"#dc2626"}}>{error}</p>}
+          {!loading && !error && filtered.length === 0 && (
+            <p style={{textAlign:"center",color:"#94a3b8"}}>No report folders found in Drive.</p>
+          )}
+          {!loading && filtered.length > 0 && (
+            <table style={{width:"100%",borderCollapse:"collapse",fontFamily:"Arial",fontSize:"13px"}}>
+              <thead>
+                <tr style={{background:"#f1f5f9"}}>
+                  <th style={{textAlign:"left",padding:"10px"}}>Folder</th>
+                  <th style={{textAlign:"left",padding:"10px"}}>Photos</th>
+                  <th style={{textAlign:"left",padding:"10px"}}>Files</th>
+                  <th style={{textAlign:"left",padding:"10px"}}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(f => (
+                  <tr key={f.id} style={{borderBottom:"1px solid #e2e8f0"}}>
+                    <td style={{padding:"10px"}}><strong>{f.name}</strong></td>
+                    <td style={{padding:"10px"}}>{f.photosCount || 0}</td>
+                    <td style={{padding:"10px"}}>
+                      {f.wordUrl && <a href={f.wordUrl} target="_blank" rel="noreferrer" style={{marginRight:"8px"}}>📄 Word</a>}
+                      {f.pdfUrl && <a href={f.pdfUrl} target="_blank" rel="noreferrer">📕 PDF</a>}
+                    </td>
+                    <td style={{padding:"10px"}}>
+                      <button onClick={() => handleImport(f)}
+                        style={{background:"#2563eb",color:"#fff",border:"0",padding:"6px 12px",borderRadius:"5px",cursor:"pointer",fontWeight:"bold",fontSize:"12px"}}>
+                        Import
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN APP
+// ============================================================
+function App() {
+  const [session, setSession] = useState(null);
+  const [page, setPage] = useState("dashboard");
+  const [reports, setReports] = useState([]);
+  const [editingReport, setEditingReport] = useState(null);
+  const [viewingReport, setViewingReport] = useState(null);
+  const [showImport, setShowImport] = useState(false);
+
+  useEffect(() => { setReports(loadReports()); }, []);
+  const reload = () => setReports(loadReports());
+
+  const handleLogin = (s) => {
+    setSession(s);
+    setPage(s.role === "admin" ? "dashboard" : "editor");
+  };
+
+  const handleLogout = () => {
+    setSession(null); setPage("dashboard");
+    setEditingReport(null); setViewingReport(null); setShowImport(false);
+  };
+
+  const handleSaveReport = (payload) => {
+    const all = loadReports();
+    if (editingReport) {
+      const idx = all.findIndex(r => r.id === editingReport.id);
+      if (idx !== -1) {
+        all[idx] = { ...all[idx], data: payload.data, photos: payload.photos, poData: payload.poData, leftLogo: payload.leftLogo, rightLogo: payload.rightLogo, updatedAt: new Date().toISOString() };
+      }
+      setEditingReport(null);
+      saveReports(all);
+      reload();
+      setPage("dashboard");
+    } else {
+      const newReport = {
+        id: "rpt_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        data: payload.data, photos: payload.photos, poData: payload.poData,
+        leftLogo: payload.leftLogo, rightLogo: payload.rightLogo,
+        createdBy: payload.createdBy || (session ? session.username : "unknown"),
+        createdAt: new Date().toISOString(), updatedAt: null
+      };
+      all.push(newReport);
+      saveReports(all);
+      reload();
+      if (session && session.role === "admin") setPage("dashboard");
+    }
+  };
+
+  const handleDelete = (report) => {
+    if (!confirm(`Delete report "${report.data.subject}"? This cannot be undone.`)) return;
+    saveReports(loadReports().filter(r => r.id !== report.id));
+    reload();
+  };
+
+  const handleEdit = (report) => { setEditingReport(report); setPage("editor"); };
+  const handleView = (report) => setViewingReport(report);
+  const handleNewReport = () => { setEditingReport(null); setPage("editor"); };
+
+  const handleImportReport = (payload) => {
+    const imported = {
+      id: "imp_" + Date.now(),
+      data: {
+        ...defaultData,
+        subject: payload.subject || "Imported Report",
+        report: payload.bodyHtml || ""
+      },
+      photos: [null, null, null, null],
+      poData: defaultPoData,
+      leftLogo: DEFAULT_LEFT_LOGO,
+      rightLogo: DEFAULT_RIGHT_LOGO,
+      createdBy: session ? session.username : "unknown",
+      createdAt: new Date().toISOString(),
+      __driveId: payload.folderId
+    };
+    setEditingReport(imported);
+    setPage("editor");
+    setShowImport(false);
+  };
+
+  if (!session) return <LoginScreen onLogin={handleLogin} />;
+
+  if (page === "editor") {
+    return (
+      <>
+        <ReportEditor
+          session={session}
+          onLogout={handleLogout}
+          initialData={editingReport ? editingReport.data : undefined}
+          initialPhotos={editingReport ? editingReport.photos : undefined}
+          initialPoData={editingReport ? editingReport.poData : undefined}
+          initialDriveId={editingReport ? editingReport.__driveId : undefined}
+          onSave={handleSaveReport}
+        />
+        {session.role === "admin" && (
+          <button className="no-print" onClick={() => { setEditingReport(null); setPage("dashboard"); }}
+            style={{position:"fixed",bottom:"20px",right:"20px",background:"#172033",color:"#fff",border:"0",padding:"12px 20px",borderRadius:"30px",fontWeight:"bold",cursor:"pointer",boxShadow:"0 6px 20px rgba(0,0,0,0.3)",fontFamily:"Arial",fontSize:"13px",zIndex:200}}>
+            ← Back to Dashboard
+          </button>
+        )}
+      </>
+    );
+  }
+
+  if (session.role === "admin") {
+    return (
+      <>
+        <div className="admin-header no-print">
+          <div><strong>🔐 JSPM Admin Panel</strong></div>
+          <div>
+            <span style={{marginRight:"16px",color:"#cbd5e1"}}>👤 {session.name}</span>
+            <button onClick={handleLogout} style={{background:"#dc2626",color:"#fff",border:"0",padding:"6px 14px",borderRadius:"6px",cursor:"pointer",fontWeight:"bold",fontSize:"12px",fontFamily:"Arial"}}>Logout</button>
+          </div>
+        </div>
+        <div style={{paddingTop:"60px"}}>
+          <AdminDashboard
+            reports={reports}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onNew={handleNewReport}
+            onRefresh={reload}
+            onImport={() => setShowImport(true)}
+          />
+        </div>
+        {viewingReport && <ViewReportModal report={viewingReport} onClose={() => setViewingReport(null)} />}
+        {showImport && <DriveImportModal onClose={() => setShowImport(false)} onImported={handleImportReport} />}
+      </>
+    );
+  }
+
+  return <LoginScreen onLogin={handleLogin} />;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
