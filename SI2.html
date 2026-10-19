@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CO Semester Result Combiner</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#111;padding:20px}
+  .wrap{max-width:1400px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 6px;color:#172033}
+  .subtitle{color:#64748b;font-size:13px;margin-bottom:20px}
+  .card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.06);margin-bottom:18px}
+  .card h2{font-size:16px;margin:0 0 12px;color:#172033;border-bottom:2px solid #e2e8f0;padding-bottom:8px}
+  .file-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+  .file-slot{flex:1;min-width:260px;border:2px dashed #cbd5e1;border-radius:10px;padding:18px;text-align:center;background:#f8fafc;transition:all .2s}
+  .file-slot.loaded{border-color:#16a34a;background:#f0fdf4}
+  .file-slot label{display:block;font-weight:bold;font-size:13px;color:#334155;margin-bottom:8px}
+  .file-slot input[type=file]{font-size:12px}
+  .file-slot .status{font-size:11px;color:#64748b;margin-top:6px;font-family:monospace}
+  .file-slot.loaded .status{color:#16a34a;font-weight:bold}
+  button{padding:11px 22px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;font-size:14px;font-family:Arial;margin-right:8px;margin-top:8px}
+  button:hover{opacity:.9}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .btn-primary{background:#2563eb;color:#fff}
+  .btn-success{background:#16a34a;color:#fff}
+  .btn-gray{background:#475569;color:#fff}
+  .btn-red{background:#dc2626;color:#fff}
+  .info-box{background:#eff6ff;border-left:4px solid #2563eb;padding:10px 14px;border-radius:6px;font-size:12px;color:#1e3a8a;margin-bottom:14px;line-height:1.6}
+  .info-box.sort{background:#f0fdf4;border-left-color:#16a34a;color:#14532d}
+  .preview-wrap{overflow:auto;max-height:520px;border:1px solid #e2e8f0;border-radius:8px}
+  table.preview{border-collapse:collapse;font-size:11px;white-space:nowrap;min-width:100%}
+  table.preview th,table.preview td{border:1px solid #cbd5e1;padding:5px 8px;text-align:left}
+  table.preview th{background:#172033;color:#fff;position:sticky;top:0;font-size:10px;text-transform:uppercase;letter-spacing:.3px;z-index:2}
+  table.preview tr:nth-child(even) td{background:#f8fafc}
+  table.preview td.num{text-align:right;font-family:monospace}
+  table.preview td.missing{background:#fef2f2;color:#b91c1c;text-align:center}
+  table.preview tr.subhead th{background:#334155;font-size:10px;top:auto}
+  table.preview th.grp1{background:#1e3a8a!important}
+  table.preview th.grp2{background:#7c2d12!important}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .stat{background:#f1f5f9;border-radius:8px;padding:10px 16px;font-size:12px;min-width:130px}
+  .stat strong{display:block;font-size:20px;color:#172033;font-family:Arial}
+  .stat small{color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:.5px}
+  .stat.ok{background:#f0fdf4}
+  .stat.ok strong{color:#16a34a}
+  .stat.warn{background:#fef3c7}
+  .stat.warn strong{color:#b45309}
+  .log{background:#0f172a;color:#94a3b8;font-family:monospace;font-size:11px;padding:12px;border-radius:8px;max-height:180px;overflow:auto;line-height:1.6;margin-top:12px}
+  .log .ok{color:#4ade80}
+  .log .warn{color:#fbbf24}
+  .log .err{color:#f87171}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📊 CO Semester Result Combiner</h1>
+  <div class="subtitle">Combines Semester 1 + Semester 2 results (Course = <b>CO</b> only) sorted by Year → Master (I before K) → Enrollment No.</div>
+
+  <div class="card">
+    <h2>1️⃣ Upload Result Files</h2>
+    <div class="file-row">
+      <div class="file-slot" id="slot1">
+        <label>📄 Semester 1 Result File (.htm / .html)</label>
+        <input type="file" id="file1" accept=".htm,.html,.txt">
+        <div class="status" id="status1">No file selected</div>
+      </div>
+      <div class="file-slot" id="slot2">
+        <label>📄 Semester 2 Result File (.htm / .html)</label>
+        <input type="file" id="file2" accept=".htm,.html,.txt">
+        <div class="status" id="status2">No file selected</div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>Output:</strong> Only students with <code>Course = CO</code> are kept. For each enrollment no., Sem 1 and Sem 2 metrics
+      (<em>Year, Master, Max Marks, Marks Final, Percent, Class</em>) are placed side-by-side.
+      <br>Students missing in one semester will show <b>“—”</b> in those columns.
+    </div>
+
+    <div class="info-box sort">
+      <strong>Sorting:</strong> Rows are sorted in this priority order:
+      <br>1️⃣ <b>Year</b> (ascending) &nbsp;→&nbsp; 2️⃣ <b>Master</b> (<b>I</b> before <b>K</b>) &nbsp;→&nbsp; 3️⃣ <b>Enrollment No.</b> (natural ascending)
+      <br>Year & Master use Sem 1 values; if missing, Sem 2 values are used as fallback.
+    </div>
+
+    <button class="btn-primary" id="mergeBtn" disabled>🔀 Merge &amp; Preview</button>
+    <button class="btn-gray" id="resetBtn">♻️ Reset</button>
+    <button class="btn-success" id="excelBtn" disabled>⬇️ Download Excel (.xlsx)</button>
+    <button class="btn-red" id="csvBtn" disabled>⬇️ Download CSV</button>
+  </div>
+
+  <div class="card hidden" id="resultCard">
+    <h2>2️⃣ Combined Preview — Course: CO (sorted by Year → Master → Enrollment No.)</h2>
+    <div class="stats" id="stats"></div>
+    <div class="preview-wrap">
+      <table class="preview" id="previewTable"></table>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+let sem1Rows = [];
+let sem2Rows = [];
+let mergedRows = [];
+let mergedHeaders = [];
+
+const $ = id => document.getElementById(id);
+const log = (msg, cls="") => {
+  const el = $("log");
+  if(!el) return;
+  const line = document.createElement("div");
+  if(cls) line.className = cls;
+  line.textContent = msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+};
+
+/* ============================================================
+   FILE READER
+   ============================================================ */
+function readFile(file, cb){
+  const reader = new FileReader();
+  reader.onload = e => cb(e.target.result);
+  reader.readAsText(file, "UTF-8");
+}
+
+/* ============================================================
+   PARSE HTML TABLE  →  array of objects
+   ============================================================ */
+function parseResultHTML(html){
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const tables = Array.from(doc.querySelectorAll("table"));
+
+  let best = null, bestScore = -1;
+
+  tables.forEach(tbl => {
+    const rows = Array.from(tbl.querySelectorAll("tr"));
+    if(rows.length < 2) return;
+    let headerRow = null, headerIdx = -1;
+
+    for(let i=0;i<Math.min(rows.length,6);i++){
+      const txt = (rows[i].innerText||"").toLowerCase();
+      if(txt.includes("enroll") && (txt.includes("name") || txt.includes("candidate"))){
+        headerRow = rows[i]; headerIdx = i; break;
+      }
+    }
+    if(!headerRow) return;
+
+    const dataRows = rows.length - headerIdx - 1;
+    if(dataRows > bestScore){
+      bestScore = dataRows;
+      best = { tbl, headerIdx };
+    }
+  });
+
+  if(!best){
+    throw new Error("Could not find a result table (need a header row with 'Enrollment No' and 'Candidate Name').");
+  }
+
+  const rows = Array.from(best.tbl.querySelectorAll("tr"));
+  const headerCells = Array.from(rows[best.headerIdx].querySelectorAll("th,td"))
+                            .map(c => cleanText(c.innerText));
+
+  const data = [];
+  for(let i = best.headerIdx + 1; i < rows.length; i++){
+    const cells = Array.from(rows[i].querySelectorAll("td,th"));
+    if(!cells.length) continue;
+    const vals = cells.map(c => cleanText(c.innerText));
+    if(vals.every(v => v === "")) continue;
+
+    const obj = {};
+    headerCells.forEach((h, idx) => { obj[h] = vals[idx] !== undefined ? vals[idx] : ""; });
+    data.push(obj);
+  }
+
+  return { headers: headerCells, rows: data };
+}
+
+const cleanText = s => (s||"").replace(/\u00a0/g," ").replace(/\s+/g," ").trim();
+
+/* ============================================================
+   COLUMN FINDER (fuzzy)
+   ============================================================ */
+function findCol(headers, ...candidates){
+  for(const c of candidates){
+    const cLow = c.toLowerCase();
+    const exact = headers.find(h => h.toLowerCase() === cLow);
+    if(exact) return exact;
+  }
+  for(const c of candidates){
+    const cLow = c.toLowerCase();
+    const partial = headers.find(h => h.toLowerCase().includes(cLow));
+    if(partial) return partial;
+  }
+  return null;
+}
+
+function getVal(row, col){ return col ? (row[col] ?? "") : ""; }
+
+/* ============================================================
+   COURSE FILTER — keep only rows whose Course is "CO"
+   ============================================================ */
+function isCOCourse(courseVal){
+  if(!courseVal) return false;
+  const v = String(courseVal).trim().toUpperCase();
+  if(/^CO([\s\-\d.]*)$/.test(v)) return true;
+  if(/\bCO\b/.test(v)) return true;
+  if(/^COMPUTER/.test(v)) return true;
+  return false;
+}
+
+/* ============================================================
+   YEAR PARSER  →  numeric value for sorting
+   ============================================================ */
+function parseYear(v){
+  if(v === "" || v === undefined || v === null) return null;
+  const s = String(v).trim().toUpperCase();
+  if(s === "—" || s === "-") return null;
+
+  const num = s.match(/\d+/);
+  if(num) return parseInt(num[0], 10);
+
+  const roman = { "I":1, "II":2, "III":3, "IV":4, "V":5 };
+  if(roman[s]) return roman[s];
+
+  const words = {
+    "FIRST":1, "SECOND":2, "THIRD":3, "FOURTH":4, "FIFTH":5,
+    "1ST":1, "2ND":2, "3RD":3, "4TH":4, "5TH":5,
+    "FY":1, "SY":2, "TY":3
+  };
+  if(words[s]) return words[s];
+
+  const anyNum = s.match(/(\d+)/);
+  if(anyNum) return parseInt(anyNum[1], 10);
+
+  return null;
+}
+
+/* ============================================================
+   MASTER PARSER  →  sort key
+   Rule: "I" (and its variants) come BEFORE "K".
+   Anything else sorts alphabetically after those two.
+   Returns { group, sub } where group: 0=I, 1=K, 2=other
+   ============================================================ */
+function parseMaster(v){
+  if(v === "" || v === undefined || v === null) return { group: 3, sub: "" };
+  const s = String(v).trim().toUpperCase();
+  if(s === "—" || s === "-") return { group: 3, sub: "" };
+
+  // Match leading letter(s) — take the first alpha char
+  const first = s.charAt(0);
+
+  // "I" variants: I, I1, I-1, IA, IB, etc. (but not "IK" style)
+  if(first === "I"){
+    // Extract numeric suffix if any
+    const num = s.match(/^I[\s\-_]*(\d+)/);
+    return { group: 0, sub: num ? num[1].padStart(4, "0") : s };
+  }
+
+  // "K" variants
+  if(first === "K"){
+    const num = s.match(/^K[\s\-_]*(\d+)/);
+    return { group: 1, sub: num ? num[1].padStart(4, "0") : s };
+  }
+
+  // Anything else → group 2, alphabetical
+  return { group: 2, sub: s };
+}
+
+function compareMaster(a, b){
+  const pa = parseMaster(a);
+  const pb = parseMaster(b);
+  if(pa.group !== pb.group) return pa.group - pb.group;
+  return pa.sub.localeCompare(pb.sub, undefined, { numeric: true, sensitivity: "base" });
+}
+
+/* ============================================================
+   MERGE LOGIC
+   Sort: Year (asc) → Master (I before K) → Enrollment No. (natural asc)
+   ============================================================ */
+function buildMerged(s1, s2){
+  const h1 = s1.headers, h2 = s2.headers;
+
+  const enrol1  = findCol(h1, "Enrollment No","Enrollment No.","Enrollment","Enroll No");
+  const name1   = findCol(h1, "Candidate Name","Candidate","Name","Student Name");
+  const course1 = findCol(h1, "Course","Course Code","Program");
+  const year1   = findCol(h1, "Year","Year Of Study","Year of Study");
+  const master1 = findCol(h1, "Master","Master Code","Master No");
+  const max1    = findCol(h1, "Max Marks","Max Marks.","MaxMarks","Maximum Marks");
+  const mfin1   = findCol(h1, "Marks Final","Marks Final.","Final Marks","Marks Obtained","Total");
+  const pct1    = findCol(h1, "percent","Percent","Percentage","%");
+  const cls1    = findCol(h1, "Class","Result","Grade");
+
+  const enrol2  = findCol(h2, "Enrollment No","Enrollment No.","Enrollment","Enroll No");
+  const name2   = findCol(h2, "Candidate Name","Candidate","Name","Student Name");
+  const course2 = findCol(h2, "Course","Course Code","Program");
+  const year2   = findCol(h2, "Year","Year Of Study","Year of Study");
+  const master2 = findCol(h2, "Master","Master Code","Master No");
+  const max2    = findCol(h2, "Max Marks","Max Marks.","MaxMarks","Maximum Marks");
+  const mfin2   = findCol(h2, "Marks Final","Marks Final.","Final Marks","Marks Obtained","Total");
+  const pct2    = findCol(h2, "percent","Percent","Percentage","%");
+  const cls2    = findCol(h2, "Class","Result","Grade");
+
+  if(!enrol1) throw new Error("Semester 1: 'Enrollment No' column not found.");
+  if(!enrol2) throw new Error("Semester 2: 'Enrollment No' column not found.");
+  if(!course1) throw new Error("Semester 1: 'Course' column not found.");
+  if(!course2) throw new Error("Semester 2: 'Course' column not found.");
+
+  const norm = v => String(v||"").trim().toUpperCase().replace(/\s+/g,"");
+
+  const map1 = new Map();
+  let filtered1 = 0;
+  s1.rows.forEach(r => {
+    if(!isCOCourse(getVal(r, course1))) return;
+    const k = norm(getVal(r, enrol1));
+    if(k){ map1.set(k, r); filtered1++; }
+  });
+
+  const map2 = new Map();
+  let filtered2 = 0;
+  s2.rows.forEach(r => {
+    if(!isCOCourse(getVal(r, course2))) return;
+    const k = norm(getVal(r, enrol2));
+    if(k){ map2.set(k, r); filtered2++; }
+  });
+
+  const keys = [];
+  const seen = new Set();
+  s1.rows.forEach(r => {
+    if(!isCOCourse(getVal(r, course1))) return;
+    const k = norm(getVal(r, enrol1));
+    if(k && !seen.has(k)){ seen.add(k); keys.push(k); }
+  });
+  s2.rows.forEach(r => {
+    if(!isCOCourse(getVal(r, course2))) return;
+    const k = norm(getVal(r, enrol2));
+    if(k && !seen.has(k)){ seen.add(k); keys.push(k); }
+  });
+
+  const headers = [
+    "Enrollment No","Candidate Name",
+    "SEM1 Year","SEM1 Master","SEM1 Max Marks","SEM1 Marks Final","SEM1 Percent","SEM1 Class",
+    "SEM2 Year","SEM2 Master","SEM2 Max Marks","SEM2 Marks Final","SEM2 Percent","SEM2 Class"
+  ];
+
+  const out = [];
+  let both = 0, only1 = 0, only2 = 0;
+
+  keys.forEach(k => {
+    const r1 = map1.get(k);
+    const r2 = map2.get(k);
+    if(r1 && r2) both++;
+    else if(r1) only1++;
+    else if(r2) only2++;
+
+    const name = (r2 && name2 ? getVal(r2, name2) : "") || (r1 && name1 ? getVal(r1, name1) : "");
+    const dash = v => (v === "" || v === undefined || v === null) ? "—" : v;
+
+    out.push({
+      "Enrollment No": k,
+      "Candidate Name": name,
+      "SEM1 Year":        r1 ? dash(getVal(r1, year1))   : "—",
+      "SEM1 Master":      r1 ? dash(getVal(r1, master1)) : "—",
+      "SEM1 Max Marks":   r1 ? dash(getVal(r1, max1))    : "—",
+      "SEM1 Marks Final": r1 ? dash(getVal(r1, mfin1))   : "—",
+      "SEM1 Percent":     r1 ? dash(getVal(r1, pct1))    : "—",
+      "SEM1 Class":       r1 ? dash(getVal(r1, cls1))    : "—",
+      "SEM2 Year":        r2 ? dash(getVal(r2, year2))   : "—",
+      "SEM2 Master":      r2 ? dash(getVal(r2, master2)) : "—",
+      "SEM2 Max Marks":   r2 ? dash(getVal(r2, max2))    : "—",
+      "SEM2 Marks Final": r2 ? dash(getVal(r2, mfin2))   : "—",
+      "SEM2 Percent":     r2 ? dash(getVal(r2, pct2))    : "—",
+      "SEM2 Class":       r2 ? dash(getVal(r2, cls2))    : "—"
+    });
+  });
+
+  /* ============================================================
+     SORT:
+       1) Year    (ascending)
+       2) Master  (I before K, then other)
+       3) Enrollment No. (natural ascending)
+     Year & Master use Sem 1 value, fallback Sem 2.
+     ============================================================ */
+  out.sort((a, b) => {
+    // ---- 1) Year ----
+    const y1a = parseYear(a["SEM1 Year"]);
+    const y1b = parseYear(b["SEM1 Year"]);
+    const y2a = parseYear(a["SEM2 Year"]);
+    const y2b = parseYear(b["SEM2 Year"]);
+    const effYa = y1a !== null ? y1a : (y2a !== null ? y2a : Infinity);
+    const effYb = y1b !== null ? y1b : (y2b !== null ? y2b : Infinity);
+    if(effYa !== effYb) return effYa - effYb;
+
+    // ---- 2) Master ----
+    const m1a = a["SEM1 Master"] !== "—" ? a["SEM1 Master"] : a["SEM2 Master"];
+    const m1b = b["SEM1 Master"] !== "—" ? b["SEM1 Master"] : b["SEM2 Master"];
+    const mCmp = compareMaster(m1a, m1b);
+    if(mCmp !== 0) return mCmp;
+
+    // ---- 3) Enrollment No. ----
+    return String(a["Enrollment No"]).localeCompare(
+      String(b["Enrollment No"]),
+      undefined,
+      { numeric: true, sensitivity: "base" }
+    );
+  });
+
+  return {
+    headers, rows: out,
+    stats: { total: keys.length, both, only1, only2, filtered1, filtered2 }
+  };
+}
+
+/* ============================================================
+   PREVIEW TABLE
+   ============================================================ */
+function renderPreview(headers, rows){
+  const tbl = $("previewTable");
+  tbl.innerHTML = "";
+
+  const thead = document.createElement("thead");
+
+  const hr = document.createElement("tr");
+  const thEnrol = document.createElement("th");
+  thEnrol.textContent = "Enrollment No"; thEnrol.rowSpan = 2; hr.appendChild(thEnrol);
+  const thName = document.createElement("th");
+  thName.textContent = "Candidate Name"; thName.rowSpan = 2; hr.appendChild(thName);
+
+  const g1 = document.createElement("th");
+  g1.textContent = "SEMESTER 1"; g1.colSpan = 6; g1.className = "grp1"; hr.appendChild(g1);
+  const g2 = document.createElement("th");
+  g2.textContent = "SEMESTER 2"; g2.colSpan = 6; g2.className = "grp2"; hr.appendChild(g2);
+  thead.appendChild(hr);
+
+  const hr2 = document.createElement("tr");
+  hr2.className = "subhead";
+  ["Year","Master","Max Marks","Marks Final","Percent","Class"].forEach(t => {
+    const th = document.createElement("th"); th.textContent = t; hr2.appendChild(th);
+  });
+  ["Year","Master","Max Marks","Marks Final","Percent","Class"].forEach(t => {
+    const th = document.createElement("th"); th.textContent = t; hr2.appendChild(th);
+  });
+  thead.appendChild(hr2);
+  tbl.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    headers.forEach(h => {
+      const td = document.createElement("td");
+      const v = r[h] ?? "";
+      td.textContent = v;
+      if(/marks|percent/i.test(h)) td.className = "num";
+      if(v === "—") td.classList.add("missing");
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+}
+
+/* ============================================================
+   EXCEL EXPORT
+   ============================================================ */
+function exportExcel(){
+  if(!mergedRows.length) return;
+
+  const aoa = [];
+  aoa.push([
+    "Enrollment No","Candidate Name",
+    "SEMESTER 1","","","","","",
+    "SEMESTER 2","","","","",""
+  ]);
+  aoa.push([
+    "","",
+    "Year","Master","Max Marks","Marks Final","Percent","Class",
+    "Year","Master","Max Marks","Marks Final","Percent","Class"
+  ]);
+  mergedRows.forEach(r => {
+    aoa.push(mergedHeaders.map(h => r[h] ?? ""));
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!merges"] = [
+    { s:{r:0,c:0}, e:{r:1,c:0} },
+    { s:{r:0,c:1}, e:{r:1,c:1} },
+    { s:{r:0,c:2}, e:{r:0,c:7} },
+    { s:{r:0,c:8}, e:{r:0,c:13} }
+  ];
+  ws["!cols"] = mergedHeaders.map(h => ({
+    wch: Math.max(h.length, ...mergedRows.slice(0,200).map(r => String(r[h]??"").length)) + 2
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "CO Combined Result");
+  const fname = `CO_Combined_Result_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  log("✓ Excel file generated: " + fname, "ok");
+}
+
+function exportCSV(){
+  if(!mergedRows.length) return;
+  const header = mergedHeaders.join(",");
+  const lines = mergedRows.map(r =>
+    mergedHeaders.map(h => {
+      const v = String(r[h] ?? "");
+      return /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v;
+    }).join(",")
+  );
+  const csv = "\uFEFF" + [header, ...lines].join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `CO_Combined_Result_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  log("✓ CSV file generated", "ok");
+}
+
+/* ============================================================
+   UI WIRING
+   ============================================================ */
+function updateSlot(slotId, statusId, label, loaded){
+  const slot = $(slotId), st = $(statusId);
+  if(loaded){ slot.classList.add("loaded"); st.textContent = "✓ Loaded: " + label; }
+  else{ slot.classList.remove("loaded"); st.textContent = "No file selected"; }
+}
+function checkReady(){
+  $("mergeBtn").disabled = !(sem1Rows.length > 0 && sem2Rows.length > 0);
+}
+
+$("file1").addEventListener("change", e => {
+  const f = e.target.files[0];
+  if(!f){ sem1Rows = []; updateSlot("slot1","status1","",false); checkReady(); return; }
+  readFile(f, html => {
+    try{
+      const parsed = parseResultHTML(html);
+      sem1Rows = parsed.rows;
+      window.__h1 = parsed.headers;
+      updateSlot("slot1","status1", `${f.name} — ${parsed.rows.length} rows`, true);
+      log(`Sem1 loaded: ${parsed.rows.length} rows`, "ok");
+    }catch(err){
+      sem1Rows = []; updateSlot("slot1","status1","",false);
+      alert("Semester 1 error: " + err.message);
+      log("Sem1 ERROR: " + err.message, "err");
+    }
+    checkReady();
+  });
+});
+
+$("file2").addEventListener("change", e => {
+  const f = e.target.files[0];
+  if(!f){ sem2Rows = []; updateSlot("slot2","status2","",false); checkReady(); return; }
+  readFile(f, html => {
+    try{
+      const parsed = parseResultHTML(html);
+      sem2Rows = parsed.rows;
+      window.__h2 = parsed.headers;
+      updateSlot("slot2","status2", `${f.name} — ${parsed.rows.length} rows`, true);
+      log(`Sem2 loaded: ${parsed.rows.length} rows`, "ok");
+    }catch(err){
+      sem2Rows = []; updateSlot("slot2","status2","",false);
+      alert("Semester 2 error: " + err.message);
+      log("Sem2 ERROR: " + err.message, "err");
+    }
+    checkReady();
+  });
+});
+
+$("mergeBtn").addEventListener("click", () => {
+  try{
+    $("log").innerHTML = "";
+    const s1 = { headers: window.__h1, rows: sem1Rows };
+    const s2 = { headers: window.__h2, rows: sem2Rows };
+    const result = buildMerged(s1, s2);
+    mergedHeaders = result.headers;
+    mergedRows = result.rows;
+
+    if(!mergedRows.length){
+      alert("No CO (Computer Engineering) records found in either file.");
+      return;
+    }
+
+    $("resultCard").classList.remove("hidden");
+    renderPreview(mergedHeaders, mergedRows);
+
+    const st = result.stats;
+    $("stats").innerHTML = `
+      <div class="stat ok"><small>CO Students (total)</small><strong>${st.total}</strong></div>
+      <div class="stat ok"><small>In Both Semesters</small><strong>${st.both}</strong></div>
+      <div class="stat warn"><small>Sem 1 Only</small><strong>${st.only1}</strong></div>
+      <div class="stat warn"><small>Sem 2 Only</small><strong>${st.only2}</strong></div>
+    `;
+
+    $("excelBtn").disabled = false;
+    $("csvBtn").disabled = false;
+
+    log(`Filtered Sem1: ${st.filtered1} CO rows  |  Filtered Sem2: ${st.filtered2} CO rows`, "ok");
+    log(`Combined ${st.total} unique CO enrollment numbers.`, "ok");
+    log(`✓ Sorted: Year ↑ → Master (I before K) → Enrollment No. ↑`, "ok");
+    if(st.only1) log(`⚠ ${st.only1} student(s) missing in Semester 2.`, "warn");
+    if(st.only2) log(`⚠ ${st.only2} student(s) missing in Semester 1.`, "warn");
+  }catch(err){
+    alert("Merge error: " + err.message);
+    log("MERGE ERROR: " + err.message, "err");
+  }
+});
+
+$("excelBtn").addEventListener("click", exportExcel);
+$("csvBtn").addEventListener("click", exportCSV);
+
+$("resetBtn").addEventListener("click", () => {
+  sem1Rows = []; sem2Rows = []; mergedRows = []; mergedHeaders = [];
+  $("file1").value = ""; $("file2").value = "";
+  updateSlot("slot1","status1","",false);
+  updateSlot("slot2","status2","",false);
+  $("resultCard").classList.add("hidden");
+  $("log").innerHTML = "";
+  $("stats").innerHTML = "";
+  $("excelBtn").disabled = true;
+  $("csvBtn").disabled = true;
+  checkReady();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JSPM — DTE Merit List Extractor</title>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#111}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:8px;font-weight:bold;padding:11px 20px;font-size:14px;font-family:Arial;transition:opacity .15s}
+button:hover{opacity:.9}
+button:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-success{background:#16a34a;color:#fff}
+.btn-gray{background:#475569;color:#fff}
+.btn-red{background:#dc2626;color:#fff}
+.btn-purple{background:#7c3aed;color:#fff}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:6px;margin:2px}
+
+/* ---------- LOGIN ---------- */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#172033 0%,#1e3a8a 100%);padding:20px}
+.login-card{background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);width:520px;max-width:100%;padding:34px 38px}
+.login-card .brand-logo{width:74px;height:74px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;margin:0 auto 16px;font-family:Arial;letter-spacing:.5px}
+.login-card h1{font-size:19px;margin:0 0 4px;text-align:center;color:#172033;font-family:Arial;line-height:1.3}
+.login-card h2{font-size:15px;margin:0 0 4px;text-align:center;color:#1e3a8a;font-family:Arial;font-weight:bold}
+.login-card .prep{text-align:center;color:#7c3aed;font-size:13px;font-weight:bold;margin-bottom:4px;font-family:Arial}
+.login-card .divider{height:2px;background:linear-gradient(90deg,transparent,#2563eb,transparent);margin:16px 0 22px}
+.login-card .subtitle{text-align:center;color:#64748b;font-size:12px;margin-bottom:22px;font-family:Arial;text-transform:uppercase;letter-spacing:1px}
+.login-card label{display:block;font-size:12px;font-weight:bold;color:#334155;margin:12px 0 4px;font-family:Arial}
+.login-card input{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#111;font-size:14px;font-family:Arial}
+.login-card input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.15)}
+.login-tabs{display:flex;gap:6px;margin-bottom:16px;background:#f1f5f9;padding:4px;border-radius:9px}
+.login-tabs button{flex:1;padding:10px;border:0;background:transparent;border-radius:6px;font-weight:bold;cursor:pointer;font-size:13px;font-family:Arial;color:#475569;transition:all .2s}
+.login-tabs button.active{background:#fff;color:#2563eb;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+.login-btn{width:100%;padding:13px;border:0;border-radius:7px;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer;font-size:14px;margin-top:16px;font-family:Arial}
+.login-btn:hover{background:#1d4ed8}
+.login-error{color:#dc2626;font-size:12px;text-align:center;min-height:18px;margin-top:10px;font-family:Arial}
+
+/* ---------- HEADER ---------- */
+.admin-header{position:fixed;top:0;left:0;right:0;background:#172033;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;z-index:100;font-family:Arial;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,0.2);flex-wrap:wrap;gap:8px}
+.admin-header strong{font-size:14px}
+.admin-header .user-tag{color:#cbd5e1;margin-right:16px}
+.admin-header .logout{background:#dc2626;color:#fff;padding:6px 14px;border-radius:6px;font-weight:bold;font-size:12px}
+
+/* ---------- DASHBOARD ---------- */
+.dashboard{padding:80px 25px 25px;max-width:1400px;margin:auto}
+.dashboard h1{font-size:24px;margin:0 0 6px;font-family:Arial;color:#172033}
+.dashboard .subtitle{color:#64748b;font-size:14px;margin-bottom:22px;font-family:Arial}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
+.stat-card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 3px 12px #0000000d;display:flex;justify-content:space-between;align-items:center}
+.stat-card .stat-info small{color:#64748b;font-size:12px;font-family:Arial;text-transform:uppercase;letter-spacing:0.5px}
+.stat-card .stat-info strong{display:block;font-size:28px;margin-top:6px;color:#172033;font-family:Arial}
+.stat-card .stat-icon{width:48px;height:48px;border-radius:10px;background:#e8f0ff;display:flex;align-items:center;justify-content:center;font-size:22px}
+.panel{background:#fff;border-radius:12px;box-shadow:0 3px 12px #0000000d;overflow:hidden;margin-bottom:22px}
+.panel .panel-header{padding:18px 22px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.panel .panel-header h2{margin:0;font-size:17px;font-family:Arial;color:#172033}
+.panel .panel-header input{padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;width:280px;font-size:13px;font-family:Arial}
+.panel table{width:100%;border-collapse:collapse;font-family:Arial}
+.panel th,.panel td{padding:12px 16px;text-align:left;border-bottom:1px solid #f1f5f9;font-size:13px}
+.panel th{background:#f8fafc;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;font-weight:bold}
+.panel tr:hover td{background:#f8fafc}
+.panel .action-btn{padding:5px 10px;border:0;border-radius:5px;font-size:11px;font-weight:bold;cursor:pointer;margin-right:4px;font-family:Arial}
+.panel .view{background:#2563eb;color:#fff}
+.panel .delete{background:#dc2626;color:#fff}
+.panel .download{background:#16a34a;color:#fff}
+.empty-state{text-align:center;padding:60px 20px;color:#94a3b8;font-family:Arial}
+.empty-state .icon{font-size:52px;margin-bottom:12px}
+.empty-state h3{margin:0 0 6px;color:#475569;font-size:16px}
+.empty-state p{margin:0;font-size:13px}
+
+/* ---------- TOOL UI ---------- */
+.wrap{max-width:1400px;margin:0 auto}
+.tool-wrap{padding:80px 20px 20px}
+h1.tool-title{font-size:22px;margin:0 0 6px;color:#172033}
+.tool-subtitle{color:#64748b;font-size:13px;margin-bottom:20px}
+.card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.06);margin-bottom:18px}
+.card h2{font-size:16px;margin:0 0 12px;color:#172033;border-bottom:2px solid #e2e8f0;padding-bottom:8px}
+.file-slot{border:2px dashed #cbd5e1;border-radius:10px;padding:22px;text-align:center;background:#f8fafc;transition:all .2s;margin-bottom:12px;cursor:pointer}
+.file-slot.dragover{border-color:#2563eb;background:#eff6ff}
+.file-slot.loaded{border-color:#16a34a;background:#f0fdf4}
+.file-slot label{display:block;font-weight:bold;font-size:13px;color:#334155;margin-bottom:10px}
+.file-slot input[type=file]{font-size:13px;width:100%;max-width:400px;margin:0 auto;display:block}
+.file-slot .formats{font-size:11px;color:#94a3b8;margin-top:6px}
+.file-slot .hint{font-size:12px;color:#2563eb;font-weight:bold;margin-top:8px}
+
+.file-queue{display:none;margin-top:14px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;background:#fff}
+.file-queue.active{display:block}
+.file-queue-header{padding:12px 16px;background:#0f172a;color:#fff;font-size:13px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.file-queue-header .actions{display:flex;gap:6px}
+.file-queue-header .actions button{padding:5px 12px;font-size:11px;margin:0}
+.file-list{max-height:300px;overflow:auto}
+.file-item{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #f1f5f9;font-family:Arial;font-size:12.5px}
+.file-item:last-child{border-bottom:0}
+.file-item .icon{font-size:18px;width:24px;text-align:center}
+.file-item .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-item .size{color:#64748b;font-family:monospace;font-size:11px;white-space:nowrap}
+.file-item .status-pill{font-size:10px;font-weight:bold;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.file-item .status-pill.waiting{background:#e2e8f0;color:#475569}
+.file-item .status-pill.processing{background:#fbbf24;color:#78350f;animation:pulse 1s infinite}
+.file-item .status-pill.done{background:#16a34a;color:#fff}
+.file-item .status-pill.error{background:#dc2626;color:#fff}
+.file-item .remove-btn{background:transparent;color:#dc2626;font-size:16px;padding:2px 8px;margin:0;border-radius:6px;font-weight:bold}
+.file-item .remove-btn:hover{background:#fee2e2}
+.file-item .rows-info{color:#16a34a;font-family:monospace;font-size:11px;font-weight:bold}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+.progress-wrap{margin-top:14px;background:#e2e8f0;border-radius:8px;overflow:hidden;height:24px;position:relative;display:none}
+.progress-wrap.active{display:block}
+.progress-bar{background:linear-gradient(90deg,#2563eb,#7c3aed);height:100%;width:0%;transition:width .3s}
+.progress-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;color:#172033;font-family:Arial}
+
+.page-strip{display:none;flex-wrap:wrap;gap:6px;margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;max-height:120px;overflow:auto}
+.page-strip.active{display:flex}
+.page-pill{font-size:11px;font-weight:bold;font-family:monospace;padding:4px 9px;border-radius:20px;background:#e2e8f0;color:#475569}
+.page-pill.processing{background:#fbbf24;color:#78350f;animation:pulse 1s infinite}
+.page-pill.done{background:#16a34a;color:#fff}
+.page-pill.text{background:#2563eb;color:#fff}
+.page-pill.fail{background:#dc2626;color:#fff}
+
+.info-box{background:#eff6ff;border-left:4px solid #2563eb;padding:10px 14px;border-radius:6px;font-size:12px;color:#1e3a8a;margin-bottom:14px;line-height:1.6}
+.info-box.warn{background:#fef3c7;border-left-color:#f59e0b;color:#78350f}
+.info-box.ok{background:#f0fdf4;border-left-color:#16a34a;color:#14532d}
+
+.preview-wrap{overflow:auto;max-height:520px;border:1px solid #e2e8f0;border-radius:8px;margin-top:14px}
+table.preview{border-collapse:collapse;font-size:11px;white-space:nowrap;min-width:100%}
+table.preview th,table.preview td{border:1px solid #cbd5e1;padding:5px 8px;text-align:left}
+table.preview th{background:#172033;color:#fff;position:sticky;top:0;font-size:10px;text-transform:uppercase;letter-spacing:.4px;z-index:2}
+table.preview tr:nth-child(even) td{background:#f8fafc}
+table.preview td.num{text-align:right;font-family:monospace}
+table.preview td.center{text-align:center}
+table.preview td.src{color:#7c3aed;font-family:monospace;font-size:10px}
+
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.stat{background:#f1f5f9;border-radius:8px;padding:10px 16px;font-size:12px;min-width:120px}
+.stat strong{display:block;font-size:22px;color:#172033;font-family:Arial}
+.stat small{color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:.5px}
+.stat.ok{background:#f0fdf4}
+.stat.ok strong{color:#16a34a}
+
+.log{background:#0f172a;color:#94a3b8;font-family:monospace;font-size:11px;padding:12px;border-radius:8px;max-height:240px;overflow:auto;line-height:1.6;margin-top:12px}
+.log .ok{color:#4ade80}
+.log .warn{color:#fbbf24}
+.log .err{color:#f87171}
+.log .info{color:#60a5fa}
+.hidden{display:none}
+
+.raw-text-panel{margin-top:14px;background:#0f172a;border-radius:10px;padding:14px;color:#cbd5e1;font-family:monospace;font-size:11px;max-height:320px;overflow:auto;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ============================================================
+   CREDENTIALS
+   ============================================================ */
+const DEFAULT_ADMIN = { username: "admin", password: "admin@123" };
+const DEFAULT_USER  = { username: "user",  password: "user@123"  };
+
+/* ============================================================
+   STORAGE
+   ============================================================ */
+const loadReports = () => {
+  try { const raw = localStorage.getItem("jspm_dte_reports"); return raw ? JSON.parse(raw) : []; }
+  catch { return []; }
+};
+const saveReports = (reports) => localStorage.setItem("jspm_dte_reports", JSON.stringify(reports));
+
+/* ============================================================
+   SHARED CONSTANTS + UTILITIES
+   ============================================================ */
+const OUTPUT_HEADERS = [
+  "Sr.No.","CAP Round","Merit No","Merit Marks","Application ID","Candidate Name",
+  "Gender","Candidature Type","Category","PH/DEF Type","Home District","Seat Type",
+  "Fees Paid ()","Admission Date","Uploaded Date"
+];
+
+const LABELS = {
+  "Sr.No.":           ["srno","sr","sno","slno","serialno","srnumber","serialnumber","sno."],
+  "CAP Round":        ["capround","round","roundno","roundnumber","counsellinground","cap","caproundno"],
+  "Merit No":         ["meritno","meritnumber","merit","institutemeritno","institutemeritnumber","meritlistno"],
+  "Merit Marks":      ["meritmarks","meritmark","marks","meritscore","score","totalmarks","meritpoints","meritpercent","meritpercentage"],
+  "Application ID":   ["applicationid","applicationno","appid","appno","applicationnumber","formno","formnumber","candidateregistrationid","registrationid","regid"],
+  "Candidate Name":   ["candidatename","candidate","name","studentname","student","fullname","nameofstudent","nameofcandidate"],
+  "Gender":           ["gender","sex"],
+  "Candidature Type": ["candidaturetype","candidature","candidaturecategory"],
+  "Category":         ["category","caste","castcategory","castcat","categoryname"],
+  "PH/DEF Type":      ["phdeftype","phdef","phtype","phtypedef","defencetype","defensetype","disabilitytype","phpwd","phdefcategory"],
+  "Home District":    ["homedistrict","district","homedist","domicile","homedistname"],
+  "Seat Type":        ["seattype","seat","quota","seatallotted","allottedcategory","allotmenttype","seatcategory"],
+  "Fees Paid ()":     ["feespaid","fees","fee","paidfees","feespaidrs","feespaidinrs","feespaidamount"],
+  "Admission Date":   ["admissiondate","dateofadmission","admissiondt","doa"],
+  "Uploaded Date":    ["uploadeddate","uploaddate","dateofupload","uploaddt","uploadedon"]
+};
+
+const norm = s => String(s||"").toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+
+function detectField(line){
+  if(!line) return null;
+  const n = norm(line);
+  if(!n) return null;
+  for(const field of OUTPUT_HEADERS){
+    if(LABELS[field].includes(n)) return field;
+  }
+  for(const field of OUTPUT_HEADERS){
+    for(const alias of LABELS[field]){
+      if(alias.length >= 5 && n.includes(alias)) return field;
+    }
+  }
+  return null;
+}
+function newRecord(){
+  const r = {};
+  OUTPUT_HEADERS.forEach(h => r[h] = "");
+  r.__hasData = false;
+  return r;
+}
+function recordHasData(r){
+  return OUTPUT_HEADERS.some(h => String(r[h]||"").trim() !== "");
+}
+function isLikelyTitle(line){
+  if(!line) return false;
+  const t = line.trim();
+  if(t.length < 3 || t.length > 120) return false;
+  if(detectField(t)) return false;
+  if(/^\d+$/.test(t)) return false;
+  if(/^[\d\s\/\-.,:]+$/.test(t)) return false;
+  if(/list|merit|round|selection|allotment|admission|counselling|provisional|cap|vacancy|seat|meritlist|result|institute|govt|government|state|maharashtra|dte/i.test(t)) return true;
+  const letters = t.replace(/[^A-Za-z]/g, "");
+  if(letters.length >= 3 && letters === letters.toUpperCase() && t.split(/\s+/).length <= 8) return true;
+  return false;
+}
+function trySplitLabels(line){
+  const hits = [];
+  for(const field of OUTPUT_HEADERS){
+    for(const alias of LABELS[field]){
+      const safe = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp("(?:^|[^A-Za-z0-9])(" + safe + ")\\s*[:\\-–—.]+\\s*", "ig");
+      let m;
+      while((m = re.exec(line)) !== null){
+        hits.push({ field, index: m.index, matchEnd: m.index + m[0].length });
+      }
+    }
+  }
+  if(hits.length === 0) return [];
+  hits.sort((a,b) => a.index - b.index);
+  const dedup = [];
+  for(const h of hits){
+    if(dedup.length && h.index < dedup[dedup.length-1].matchEnd) continue;
+    dedup.push(h);
+  }
+  const parts = [];
+  for(let i=0;i<dedup.length;i++){
+    const h = dedup[i];
+    const start = h.matchEnd;
+    const end = (i+1 < dedup.length) ? dedup[i+1].index : line.length;
+    let value = line.substring(start, end).trim();
+    value = value.replace(/^[:\-–—.\s]+/,"").replace(/[:\-–—.\s]+$/,"").trim();
+    parts.push({ field: h.field, value });
+  }
+  return parts;
+}
+function fillMissingField(rec, line){
+  const val = line.trim();
+  if(!val) return false;
+  if(/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}$/.test(val)){
+    if(!rec["Admission Date"]){ rec["Admission Date"] = val; rec.__hasData = true; return true; }
+    if(!rec["Uploaded Date"]){ rec["Uploaded Date"] = val; rec.__hasData = true; return true; }
+    return false;
+  }
+  if(/^\d+\.\d+$/.test(val)){
+    if(!rec["Merit Marks"]){ rec["Merit Marks"] = val; rec.__hasData = true; return true; }
+    if(!rec["Fees Paid ()"]){ rec["Fees Paid ()"] = val; rec.__hasData = true; return true; }
+    return false;
+  }
+  if(/^\d{1,6}$/.test(val)){
+    if(!rec["Sr.No."]){ rec["Sr.No."] = val; rec.__hasData = true; return true; }
+    if(!rec["CAP Round"]){ rec["CAP Round"] = val; rec.__hasData = true; return true; }
+    if(!rec["Merit No"]){ rec["Merit No"] = val; rec.__hasData = true; return true; }
+    return false;
+  }
+  if(/^[A-Z0-9]{6,}$/i.test(val) && /\d/.test(val)){
+    if(!rec["Application ID"]){ rec["Application ID"] = val; rec.__hasData = true; return true; }
+  }
+  if(/^(M|F|MALE|FEMALE|OTHER|O)$/i.test(val)){
+    if(!rec["Gender"]){ rec["Gender"] = val; rec.__hasData = true; return true; }
+  }
+  if(/^[A-Z\/]{2,20}$/.test(val)){
+    if(!rec["Seat Type"] && /OPEN|OBC|SC|ST|EWS|TFWS|VJ|NT|SBC|GOPEN|LOPEN|DEF|PH|MI|ORPHAN|LADIES|GIRLS|AI|ACAP|IL/i.test(val)){
+      rec["Seat Type"] = val; rec.__hasData = true; return true;
+    }
+    if(!rec["Category"]){ rec["Category"] = val; rec.__hasData = true; return true; }
+  }
+  if(!rec["Candidate Name"]){
+    rec["Candidate Name"] = val; rec.__hasData = true; return true;
+  }
+  return false;
+}
+function extractFromText(text){
+  const rawLines = text.split(/\r?\n/).map(l => l.replace(/\s+/g," ").trim());
+  const lines = rawLines.filter(l => !/^---\s*page\s*\d+/i.test(l) && !/^page\s*\d+$/i.test(l));
+  const records = [];
+  let cur = newRecord();
+  let pendingField = null;
+  const flush = () => {
+    if(recordHasData(cur)){ delete cur.__hasData; records.push(cur); }
+    cur = newRecord(); pendingField = null;
+  };
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+    if(!line){ pendingField = null; continue; }
+    const headerHits = OUTPUT_HEADERS.filter(f => LABELS[f].some(a => norm(line).includes(a) && a.length >= 5)).length;
+    if(headerHits >= 3){ flush(); continue; }
+    if(isLikelyTitle(line)){ flush(); continue; }
+    const split = trySplitLabels(line);
+    if(split.length > 0){
+      let any = false;
+      split.forEach(p => { if(!p.value) return; any = true; cur[p.field] = (cur[p.field] ? cur[p.field] + " " : "") + p.value; cur.__hasData = true; });
+      if(any){ pendingField = null; continue; }
+    }
+    const f = detectField(line);
+    if(f){ pendingField = f; continue; }
+    if(pendingField){
+      cur[pendingField] = (cur[pendingField] ? cur[pendingField] + " " : "") + line;
+      cur.__hasData = true; pendingField = null; continue;
+    }
+    const used = fillMissingField(cur, line);
+    if(!used){
+      const filled = OUTPUT_HEADERS.filter(h => cur[h]).length;
+      if(filled >= 3){ flush(); fillMissingField(cur, line); }
+    }
+  }
+  flush();
+  return records.filter(r => OUTPUT_HEADERS.some(h => r[h]));
+}
+function extractFromTableMatrix(matrix){
+  if(!matrix || matrix.length < 2) return [];
+  let headerIdx = -1, bestScore = -1;
+  for(let i=0;i<Math.min(matrix.length, 20);i++){
+    const row = matrix[i] || [];
+    if(row.length < 3) continue;
+    let score = 0;
+    row.forEach(c => { if(detectField(String(c))) score++; });
+    score += Math.min(matrix.length - i - 1, 100) / 100;
+    if(score > bestScore){ bestScore = score; headerIdx = i; }
+  }
+  if(headerIdx === -1 || bestScore < 1) return [];
+  const headerRow = matrix[headerIdx].map(c => String(c));
+  const idxMap = {};
+  OUTPUT_HEADERS.forEach(field => {
+    idxMap[field] = -1;
+    for(let i=0;i<headerRow.length;i++){
+      if(detectField(headerRow[i]) === field){ idxMap[field] = i; break; }
+    }
+  });
+  if(Object.values(idxMap).every(v => v === -1)) return [];
+  const out = [];
+  for(let i=headerIdx+1; i<matrix.length; i++){
+    const raw = matrix[i] || [];
+    if(raw.every(v => String(v).trim() === "")) continue;
+    let headerHits = 0;
+    raw.forEach(c => { if(detectField(String(c))) headerHits++; });
+    if(headerHits >= 3) continue;
+    const rec = newRecord();
+    let hasData = false;
+    OUTPUT_HEADERS.forEach(field => {
+      const idx = idxMap[field];
+      if(idx === -1) return;
+      const v = String(raw[idx] ?? "").replace(/\s+/g," ").trim();
+      if(v){ rec[field] = v; hasData = true; }
+    });
+    if(!hasData) continue;
+    const joined = (rec["Candidate Name"] + " " + rec["Merit No"]).toLowerCase();
+    if(/\b(total|grand total|signature|authorized|principal|hod|coordinator|printed|page)\b/.test(joined)) continue;
+    delete rec.__hasData;
+    out.push(rec);
+  }
+  return out;
+}
+function parseHTMLContent(text){
+  const doc = new DOMParser().parseFromString(text, "text/html");
+  const tables = Array.from(doc.querySelectorAll("table"));
+  const allRows = [];
+  tables.forEach(tbl => {
+    const trs = Array.from(tbl.querySelectorAll("tr"));
+    const matrix = trs.map(tr => {
+      const cells = Array.from(tr.querySelectorAll("th,td"));
+      return cells.map(c => (c.innerText || c.textContent || "").replace(/\s+/g," ").trim());
+    });
+    const rows = extractFromTableMatrix(matrix);
+    if(rows.length) allRows.push(...rows);
+  });
+  if(allRows.length === 0){
+    const txt = doc.body ? doc.body.innerText : (doc.documentElement.innerText || "");
+    return { rows: extractFromText(txt), rawText: txt.slice(0, 3000) };
+  }
+  return { rows: allRows, rawText: "" };
+}
+function parseExcelData(data){
+  const wb = XLSX.read(data, { type: "array" });
+  let allRows = [];
+  wb.SheetNames.forEach(sheetName => {
+    const ws = wb.Sheets[sheetName];
+    const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: false });
+    if(aoa.length < 2) return;
+    const rows = extractFromTableMatrix(aoa.map(r => (r||[]).map(c => String(c))));
+    if(rows.length) allRows = allRows.concat(rows);
+  });
+  if(allRows.length === 0) throw new Error("No records found in any sheet.");
+  return { rows: allRows, rawText: "" };
+}
+
+/* OCR helper for PDF/image */
+async function readPDFForParsing(arrayBuffer, onProgress, ocrLang){
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const numPages = pdf.numPages;
+  const perPage = [];
+  let allText = "", textPageCount = 0;
+
+  for(let p=1; p<=numPages; p++){
+    onProgress && onProgress(3 + Math.round((p/numPages)*22), `Reading page ${p}/${numPages}…`);
+    try{
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      let pageText = "", lastY = null;
+      content.items.forEach(it => {
+        if(lastY !== null && Math.abs(it.transform[5] - lastY) > 2) pageText += "\n";
+        pageText += it.str + " ";
+        lastY = it.transform[5];
+      });
+      allText += `\n--- PAGE ${p} ---\n` + pageText + "\n";
+      if(pageText.replace(/\s+/g,"").length > 50){ textPageCount++; perPage.push({ page: p, kind: "text" }); }
+      else perPage.push({ page: p, kind: "empty" });
+    }catch(e){ perPage.push({ page: p, kind: "fail" }); }
+  }
+
+  const totalText = allText.replace(/---\s*PAGE\s*\d+\s*---/g,"").replace(/\s+/g,"").length;
+
+  // Try text parse first
+  if(totalText > 200 && textPageCount >= Math.ceil(numPages / 2)){
+    const rows = extractFromText(allText);
+    if(rows.length >= 1){
+      return { rows, rawText: allText.slice(0, 3000), pageStates: perPage };
+    }
+  }
+
+  // OCR fallback
+  let allOCRText = "";
+  const pageStates = [];
+  for(let p=1; p<=numPages; p++){
+    onProgress && onProgress(35 + Math.round((p/numPages)*55), `OCR page ${p}/${numPages}…`);
+    try{
+      const page = await pdf.getPage(p);
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement("canvas");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext("2d");
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const dataUrl = canvas.toDataURL("image/png");
+      const { data: { text } } = await Tesseract.recognize(dataUrl, ocrLang || "eng");
+      allOCRText += `\n--- PAGE ${p} ---\n` + text + "\n";
+      pageStates.push({ page: p, kind: "ocr" });
+    }catch(e){ pageStates.push({ page: p, kind: "fail" }); }
+  }
+  const rows = extractFromText(allOCRText);
+  if(rows.length === 0) throw new Error("OCR ran but no records detected.");
+  return { rows, rawText: allOCRText.slice(0, 3000), pageStates };
+}
+
+async function readImageForParsing(file, onProgress, ocrLang){
+  onProgress && onProgress(20, "Running OCR on image…");
+  const dataUrl = await new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+  const { data: { text } } = await Tesseract.recognize(dataUrl, ocrLang || "eng", {
+    logger: m => { if(m.status === "recognizing text") onProgress && onProgress(20 + Math.round(m.progress*65), "OCR " + Math.round(m.progress*100) + "%"); }
+  });
+  onProgress && onProgress(90, "Parsing OCR text…");
+  const rows = extractFromText(text);
+  if(rows.length === 0) throw new Error("No records detected in image.");
+  return { rows, rawText: text.slice(0, 3000), pageStates: [{ page: 1, kind: "ocr" }] };
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function LoginScreen({ onLogin }){
+  const [mode, setMode] = useState("admin");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+    const u = username.trim(), p = password.trim();
+    if(!u || !p){ setError("Please enter both username and password."); return; }
+    if(mode === "admin"){
+      if(u === DEFAULT_ADMIN.username && p === DEFAULT_ADMIN.password) onLogin({ role: "admin", name: "Administrator", username: u });
+      else setError("Invalid admin credentials.");
+    } else {
+      if(u === DEFAULT_USER.username && p === DEFAULT_USER.password) onLogin({ role: "user", name: u, username: u });
+      else setError("Invalid user credentials.");
+    }
+  };
+  return (
+    <div className="login-wrap">
+      <form className="login-card" onSubmit={handleSubmit}>
+        <div className="brand-logo">JSPM</div>
+        <h1>Jayawantrao Sawant Polytechnic</h1>
+        <h2>Hadapsar, Pune</h2>
+        <div className="subtitle" style={{marginTop:"6px",marginBottom:"8px"}}>Computer Engineering Department</div>
+        <div className="prep">Prepared By — Mr. S. S. Shende</div>
+        <div className="divider"></div>
+        <div className="login-tabs">
+          <button type="button" className={mode === "admin" ? "active" : ""} onClick={() => { setMode("admin"); setError(""); }}>🔐 Admin Login</button>
+          <button type="button" className={mode === "user" ? "active" : ""} onClick={() => { setMode("user"); setError(""); }}>👤 User Login</button>
+        </div>
+        <label>Username</label>
+        <input value={username} onChange={e => setUsername(e.target.value)} placeholder={mode === "admin" ? "Enter admin username" : "Enter user username"} />
+        <label>Password</label>
+        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" />
+        <div className="login-error">{error}</div>
+        <button type="submit" className="login-btn">{mode === "admin" ? "🔐 Login as Admin" : "👤 Login as User"}</button>
+      </form>
+    </div>
+  );
+}
+
+/* ============================================================
+   DTE MERIT LIST TOOL (used inside User section)
+   ============================================================ */
+function MeritListTool({ session, onSaveReport }){
+  const [fileQueue, setFileQueue] = useState([]);
+  const [extractedRows, setExtractedRows] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [progress, setProgress] = useState(null);
+  const [progressText, setProgressText] = useState("Idle");
+  const [dragover, setDragover] = useState(false);
+  const [rawText, setRawText] = useState("");
+  const [showRaw, setShowRaw] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const inputRef = useRef(null);
+  const seqRef = useRef(0);
+
+  const addLog = (msg, cls="") => setLogs(prev => [...prev, { msg, cls }]);
+
+  const addFiles = (fl) => {
+    const newFiles = Array.from(fl).map(f => ({
+      id: "f_" + Date.now() + "_" + (++seqRef.current),
+      file: f,
+      status: "waiting",
+      rows: null,
+      error: null
+    }));
+    setFileQueue(prev => [...prev, ...newFiles]);
+  };
+
+  const removeFile = (id) => setFileQueue(prev => prev.filter(f => f.id !== id));
+  const clearAll = () => {
+    if(!confirm("Clear all files and results?")) return;
+    setFileQueue([]);
+    setExtractedRows([]);
+    setLogs([]);
+    setRawText("");
+    setProgress(null);
+  };
+
+  const handleExtract = async () => {
+    if(!fileQueue.length) return;
+    setLogs([]);
+    setExtractedRows([]);
+    setRawText("");
+    setProgress(3);
+    setProgressText("Starting…");
+
+    let allRows = [];
+    const updated = [...fileQueue];
+
+    for(let i=0;i<updated.length;i++){
+      const entry = updated[i];
+      if(entry.status === "done" && entry.rows) { allRows = allRows.concat(entry.rows); continue; }
+
+      updated[i] = { ...entry, status: "processing" };
+      setFileQueue([...updated]);
+
+      const baseProgress = (i / updated.length) * 100;
+      const sliceProgress = (1 / updated.length) * 100;
+      const onP = (pct, txt) => {
+        const overall = baseProgress + (pct/100) * sliceProgress;
+        setProgress(Math.min(99, overall));
+        setProgressText(`[${i+1}/${updated.length}] ${entry.file.name} — ${txt}`);
+      };
+
+      try{
+        const f = entry.file;
+        const ext = (f.name || "").toLowerCase().split(".").pop();
+        let parsed = { rows: [], rawText: "" };
+
+        if(ext === "htm" || ext === "html" || ext === "txt"){
+          const text = await f.text();
+          onP(50, "Parsing HTML/table…");
+          parsed = parseHTMLContent(text);
+          parsed.rawText = text.slice(0, 3000);
+        } else if(ext === "xlsx" || ext === "xls" || ext === "csv"){
+          const buf = await f.arrayBuffer();
+          onP(50, "Parsing Excel sheet…");
+          parsed = parseExcelData(new Uint8Array(buf));
+        } else if(ext === "pdf"){
+          const buf = await f.arrayBuffer();
+          parsed = await readPDFForParsing(buf, onP, "eng");
+        } else if(["png","jpg","jpeg","webp","bmp","tiff"].includes(ext)){
+          parsed = await readImageForParsing(f, onP, "eng");
+        } else throw new Error("Unsupported file type");
+
+        parsed.rows.forEach(r => { r.__source = f.name; });
+        allRows = allRows.concat(parsed.rows);
+        updated[i] = { ...entry, status: "done", rows: parsed.rows };
+        setFileQueue([...updated]);
+        if(parsed.rawText) setRawText(parsed.rawText);
+        addLog(`✓ ${f.name} — ${parsed.rows.length} records`, "ok");
+      }catch(err){
+        updated[i] = { ...entry, status: "error", error: err.message };
+        setFileQueue([...updated]);
+        addLog(`✗ ${entry.file.name} — ${err.message}`, "err");
+      }
+    }
+
+    allRows.forEach((r, i) => { r["Sr.No."] = String(i + 1); });
+    setExtractedRows(allRows);
+    setProgress(100);
+    setProgressText(`Done — ${allRows.length} records`);
+    setTimeout(() => { setProgress(null); setProgressText("Idle"); }, 1500);
+    addLog(`✓ Total ${allRows.length} records combined`, "ok");
+  };
+
+  const downloadExcel = () => {
+    if(!extractedRows.length) return;
+    const aoa = [[...OUTPUT_HEADERS, "Source File"]];
+    extractedRows.forEach(r => aoa.push([...OUTPUT_HEADERS.map(h => r[h] ?? ""), r.__source ?? ""]));
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws["!cols"] = OUTPUT_HEADERS.map(h => ({ wch: Math.max(10, h.length + 2) })).concat([{wch:28}]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Merit List");
+    XLSX.writeFile(wb, `CAP_Merit_List_${new Date().toISOString().slice(0,10)}.xlsx`);
+    addLog("✓ Excel downloaded", "ok");
+  };
+
+  const downloadCSV = () => {
+    if(!extractedRows.length) return;
+    const headers = [...OUTPUT_HEADERS, "Source File"];
+    const header = headers.join(",");
+    const lines = extractedRows.map(r => headers.map(h => {
+      const v = String(h === "Source File" ? (r.__source ?? "") : (r[h] ?? ""));
+      return /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v;
+    }).join(","));
+    const csv = "\uFEFF" + [header, ...lines].join("\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `CAP_Merit_List_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const dedupe = () => {
+    if(!extractedRows.length) return;
+    const map = new Map(); const order = [];
+    extractedRows.forEach(r => {
+      const key = (r["Application ID"] || "").trim().toUpperCase();
+      if(!key){ order.push({ raw: r }); return; }
+      if(!map.has(key)) order.push({ key });
+      map.set(key, r);
+    });
+    const res = []; order.forEach(o => res.push(o.key ? map.get(o.key) : o.raw));
+    res.forEach((r, i) => { r["Sr.No."] = String(i + 1); });
+    setExtractedRows(res);
+    addLog(`✓ Deduped — kept ${res.length}`, "ok");
+  };
+
+  const printList = () => {
+    if(!extractedRows.length) return;
+    const w = window.open("", "_blank");
+    const hdrs = [...OUTPUT_HEADERS, "Source"];
+    const rowsHtml = extractedRows.map(r =>
+      `<tr>${OUTPUT_HEADERS.map(h => `<td>${String(r[h]||"")}</td>`).join("")}<td style="color:#7c3aed;font-size:9px">${String(r.__source||"")}</td></tr>`
+    ).join("");
+    w.document.write(`<html><head><title>CAP Merit List</title><style>
+      body{font-family:Arial;padding:15px}
+      h2{text-align:center;margin-bottom:6px}
+      table{border-collapse:collapse;width:100%;font-size:8.5px}
+      th,td{border:1px solid #333;padding:3px 5px;text-align:left}
+      th{background:#172033;color:#fff;font-size:7.5px;text-transform:uppercase}
+      tr:nth-child(even) td{background:#f8fafc}
+      @page{size:A3 landscape;margin:6mm}
+    </style></head><body>
+    <h2>CAP Merit List</h2>
+    <div style="text-align:center;font-size:10px;color:#666;margin-bottom:10px">Generated ${new Date().toLocaleString()} — ${extractedRows.length} students</div>
+    <table><thead><tr>${hdrs.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table>
+    </body></html>`);
+    w.document.close(); w.focus();
+    setTimeout(() => w.print(), 300);
+  };
+
+  const copyTSV = () => {
+    if(!extractedRows.length) return;
+    const headers = [...OUTPUT_HEADERS, "Source File"];
+    const header = headers.join("\t");
+    const lines = extractedRows.map(r => headers.map(h => h === "Source File" ? (r.__source ?? "") : (r[h] ?? "")).join("\t")).join("\n");
+    navigator.clipboard.writeText(header + "\n" + lines).then(() => addLog("✓ Copied to clipboard", "ok"));
+  };
+
+  const handleSave = () => {
+    if(!extractedRows.length){ alert("Nothing to save."); return; }
+    onSaveReport({
+      headers: OUTPUT_HEADERS,
+      rows: extractedRows,
+      createdBy: session.name || session.username
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const srcCount = new Set(extractedRows.map(r => r.__source)).size;
+  const filled = h => extractedRows.filter(r => r[h]).length;
+
+  return (
+    <div className="tool-wrap">
+      <h1 className="tool-title">📋 DTE / CAP Merit List Extractor</h1>
+      <div className="tool-subtitle">Upload HTML, Excel, PDF (text or scanned), or image merit lists. Extracts 15 fields and combines into one Excel.</div>
+
+      <div className="card">
+        <h2>1️⃣ Upload Files</h2>
+        <div className={"file-slot" + (dragover ? " dragover" : "")}
+          onDragOver={e => { e.preventDefault(); setDragover(true); }}
+          onDragLeave={e => { e.preventDefault(); setDragover(false); }}
+          onDrop={e => { e.preventDefault(); setDragover(false); if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files); }}
+          onClick={e => { if(e.target.tagName !== "INPUT") inputRef.current?.click(); }}>
+          <label>📄 Click to select files, or drag & drop</label>
+          <input ref={inputRef} type="file" multiple accept=".htm,.html,.txt,.xlsx,.xls,.csv,.pdf,.png,.jpg,.jpeg,.webp,.bmp,.tiff"
+            onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
+          <div className="formats">.htm .html .xlsx .xls .csv .pdf .png .jpg .jpeg .webp .bmp .tiff</div>
+          <div className="hint">↳ Multiple files · all pages · strong OCR for scanned PDFs</div>
+        </div>
+
+        {fileQueue.length > 0 && (
+          <div className="file-queue active">
+            <div className="file-queue-header">
+              <span>Files ({fileQueue.length})</span>
+              <div className="actions">
+                <button className="btn-gray btn-sm" onClick={() => inputRef.current?.click()}>+ Add More</button>
+                <button className="btn-red btn-sm" onClick={clearAll}>✕ Clear All</button>
+              </div>
+            </div>
+            <div className="file-list">
+              {fileQueue.map(f => (
+                <div className="file-item" key={f.id}>
+                  <div className="icon">📄</div>
+                  <div className="name" title={f.file.name}>{f.file.name}</div>
+                  <div className="size">{(f.file.size/1024).toFixed(1)} KB</div>
+                  <div>{f.status === "done" && <span className="rows-info">{f.rows?.length || 0} rows</span>}</div>
+                  <div className={`status-pill ${f.status}`}>{f.status}</div>
+                  <button className="remove-btn" onClick={() => removeFile(f.id)}>✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button className="btn-primary" disabled={!fileQueue.length} onClick={handleExtract}>🚀 Extract All Files</button>
+        <button className="btn-gray" onClick={clearAll}>♻️ Reset</button>
+
+        {progress !== null && (
+          <div className="progress-wrap active">
+            <div className="progress-bar" style={{width: progress + "%"}}></div>
+            <div className="progress-text">{progressText}</div>
+          </div>
+        )}
+
+        {rawText && (
+          <div style={{marginTop:"14px"}}>
+            <button className="btn-gray btn-sm" onClick={() => setShowRaw(!showRaw)}>🔍 Show / Hide Raw Text</button>
+            {showRaw && <div className="raw-text-panel">{rawText}</div>}
+          </div>
+        )}
+      </div>
+
+      {extractedRows.length > 0 && (
+        <div className="card">
+          <h2>2️⃣ Combined Merit List ({extractedRows.length} records)</h2>
+          <div className="stats">
+            <div className="stat ok"><small>Total</small><strong>{extractedRows.length}</strong></div>
+            <div className="stat"><small>Files</small><strong>{srcCount}</strong></div>
+            <div className="stat"><small>With App ID</small><strong>{filled("Application ID")}</strong></div>
+            <div className="stat"><small>With Merit No</small><strong>{filled("Merit No")}</strong></div>
+            <div className="stat"><small>With Name</small><strong>{filled("Candidate Name")}</strong></div>
+            <div className="stat"><small>With Seat Type</small><strong>{filled("Seat Type")}</strong></div>
+          </div>
+
+          <div style={{marginBottom:"14px"}}>
+            <button className="btn-success" onClick={downloadExcel}>⬇️ Download Excel (.xlsx)</button>
+            <button className="btn-red" onClick={downloadCSV}>⬇️ CSV</button>
+            <button className="btn-primary" onClick={printList}>🖨️ Print</button>
+            <button className="btn-purple" onClick={copyTSV}>📋 Copy TSV</button>
+            <button className="btn-gray" onClick={dedupe}>🔁 Dedupe by Application ID</button>
+            <button className="btn-success" onClick={handleSave}>💾 Save Report</button>
+            {saved && <span style={{marginLeft:"10px",color:"#16a34a",fontWeight:"bold",fontSize:"13px"}}>✓ Saved!</span>}
+          </div>
+
+          <div className="preview-wrap">
+            <table className="preview">
+              <thead><tr>{[...OUTPUT_HEADERS, "Source"].map(h => <th key={h}>{h}</th>)}</tr></thead>
+              <tbody>
+                {extractedRows.slice(0, 1000).map((r, i) => (
+                  <tr key={i}>
+                    {OUTPUT_HEADERS.map(h => (
+                      <td key={h} className={
+                        ["Sr.No.","CAP Round","Gender"].includes(h) ? "center" :
+                        ["Merit No","Merit Marks","Application ID","Fees Paid ()"].includes(h) ? "num" : ""
+                      }>{r[h]}</td>
+                    ))}
+                    <td className="src">{r.__source}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="log">
+            {logs.map((l, i) => <div key={i} className={l.cls}>{l.msg}</div>)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   USER PANEL
+   ============================================================ */
+function UserPanel({ session, onLogout }){
+  const handleSaveReport = (payload) => {
+    const all = loadReports();
+    all.push({
+      id: "rpt_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      tool: "DTE Merit List",
+      headers: payload.headers,
+      rows: payload.rows,
+      createdBy: payload.createdBy,
+      createdAt: new Date().toISOString()
+    });
+    saveReports(all);
+  };
+
+  return (
+    <>
+      <div className="admin-header no-print">
+        <div>
+          <strong>👤 JSPM User Panel</strong> &nbsp;
+          <span style={{color:"#94a3b8",fontWeight:"normal",fontSize:"12px"}}>| Computer Engineering Dept. | Prepared By: Mr. S. S. Shende</span>
+        </div>
+        <div>
+          <span className="user-tag">👤 {session.name}</span>
+          <button className="logout" onClick={onLogout}>Logout</button>
+        </div>
+      </div>
+      <MeritListTool session={session} onSaveReport={handleSaveReport} />
+    </>
+  );
+}
+
+/* ============================================================
+   ADMIN DASHBOARD
+   ============================================================ */
+function AdminDashboard({ reports, onDelete, onRefresh }){
+  const [search, setSearch] = useState("");
+  const [viewing, setViewing] = useState(null);
+
+  const filtered = reports.filter(r =>
+    (r.createdBy || "").toLowerCase().includes(search.toLowerCase()) ||
+    (r.createdAt || "").toLowerCase().includes(search.toLowerCase()) ||
+    (r.tool || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalReports = reports.length;
+  const today = new Date().toISOString().slice(0,10);
+  const todayCount = reports.filter(r => r.createdAt && r.createdAt.slice(0,10) === today).length;
+  const totalStudents = reports.reduce((a, r) => a + ((r.rows?.length) || 0), 0);
+
+  const downloadReport = (r) => {
+    const headers = r.headers || OUTPUT_HEADERS;
+    const aoa = [[...headers, "Source File"]];
+    r.rows.forEach(row => aoa.push([...headers.map(h => row[h] ?? ""), row.__source ?? ""]));
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws["!cols"] = headers.map(h => ({ wch: Math.max(10, h.length + 2) })).concat([{wch:28}]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Merit List");
+    XLSX.writeFile(wb, `Report_${r.id}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+
+  return (
+    <div className="dashboard">
+      <h1>📊 Admin Dashboard</h1>
+      <div className="subtitle">Manage all DTE merit lists saved by users</div>
+
+      <div className="stats-grid">
+        <div className="stat-card"><div className="stat-info"><small>Total Reports</small><strong>{totalReports}</strong></div><div className="stat-icon">📄</div></div>
+        <div className="stat-card"><div className="stat-info"><small>Today</small><strong>{todayCount}</strong></div><div className="stat-icon">📅</div></div>
+        <div className="stat-card"><div className="stat-info"><small>Total Students</small><strong>{totalStudents}</strong></div><div className="stat-icon">🎓</div></div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">
+          <h2>📋 All Saved Reports</h2>
+          <div style={{display:"flex",gap:"8px",alignItems:"center",flexWrap:"wrap"}}>
+            <input placeholder="Search by user, date, tool..." value={search} onChange={e => setSearch(e.target.value)} />
+            <button className="btn-primary btn-sm" onClick={onRefresh}>↻ Refresh</button>
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="icon">📭</div>
+            <h3>No saved reports yet</h3>
+            <p>Reports saved by users will appear here.</p>
+          </div>
+        ) : (
+          <div style={{overflowX:"auto"}}>
+            <table>
+              <thead>
+                <tr><th>#</th><th>Tool</th><th>Saved By</th><th>Saved At</th><th>Records</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                {filtered.map((r, i) => (
+                  <tr key={r.id}>
+                    <td>{i+1}</td>
+                    <td><strong>{r.tool || "—"}</strong></td>
+                    <td>{r.createdBy || "—"}</td>
+                    <td>{r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}</td>
+                    <td>{(r.rows?.length) || 0}</td>
+                    <td>
+                      <button className="action-btn view" onClick={() => setViewing(r)}>👁 View</button>
+                      <button className="action-btn download" onClick={() => downloadReport(r)}>⬇ Excel</button>
+                      <button className="action-btn delete" onClick={() => onDelete(r)}>🗑 Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {viewing && (
+        <div className="login-wrap" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",zIndex:999,alignItems:"flex-start",paddingTop:"40px"}} onClick={(e) => { if(e.target === e.currentTarget) setViewing(null); }}>
+          <div style={{background:"#eef2f7",borderRadius:"12px",padding:"20px",maxWidth:"1500px",width:"100%",maxHeight:"90vh",overflow:"auto"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px",flexWrap:"wrap",gap:"8px"}}>
+              <h3 style={{margin:0,fontFamily:"Arial"}}>📄 {viewing.tool} — by {viewing.createdBy} — {new Date(viewing.createdAt).toLocaleString()}</h3>
+              <div>
+                <button className="btn-success btn-sm" onClick={() => downloadReport(viewing)}>⬇ Excel</button>
+                <button className="btn-red btn-sm" onClick={() => setViewing(null)} style={{marginLeft:"6px"}}>✕ Close</button>
+              </div>
+            </div>
+            <div className="preview-wrap" style={{background:"#fff",maxHeight:"70vh"}}>
+              <table className="preview">
+                <thead><tr>{(viewing.headers || OUTPUT_HEADERS).map(h => <th key={h}>{h}</th>)}<th>Source</th></tr></thead>
+                <tbody>
+                  {viewing.rows.slice(0, 500).map((r, i) => (
+                    <tr key={i}>
+                      {(viewing.headers || OUTPUT_HEADERS).map(h => <td key={h}>{r[h]}</td>)}
+                      <td className="src">{r.__source}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   ADMIN PANEL
+   ============================================================ */
+function AdminPanel({ session, onLogout }){
+  const [reports, setReports] = useState([]);
+  const reload = () => setReports(loadReports());
+  useEffect(() => { reload(); }, []);
+
+  const handleDelete = (r) => {
+    if(!confirm(`Delete report by "${r.createdBy}"?`)) return;
+    saveReports(loadReports().filter(x => x.id !== r.id));
+    reload();
+  };
+
+  return (
+    <>
+      <div className="admin-header no-print">
+        <div>
+          <strong>🔐 JSPM Admin Panel</strong> &nbsp;
+          <span style={{color:"#94a3b8",fontWeight:"normal",fontSize:"12px"}}>| Computer Engineering Dept. | Prepared By: Mr. S. S. Shende</span>
+        </div>
+        <div>
+          <span className="user-tag">👤 {session.name}</span>
+          <button className="logout" onClick={onLogout}>Logout</button>
+        </div>
+      </div>
+      <AdminDashboard reports={reports} onDelete={handleDelete} onRefresh={reload} />
+    </>
+  );
+}
+
+/* ============================================================
+   MAIN APP
+   ============================================================ */
+function App(){
+  const [session, setSession] = useState(null);
+  const handleLogin = (s) => setSession(s);
+  const handleLogout = () => setSession(null);
+
+  if(!session) return <LoginScreen onLogin={handleLogin} />;
+  if(session.role === "admin") return <AdminPanel session={session} onLogout={handleLogout} />;
+  if(session.role === "user") return <UserPanel session={session} onLogout={handleLogout} />;
+  return <LoginScreen onLogin={handleLogin} />;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

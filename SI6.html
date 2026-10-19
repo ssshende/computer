@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JSPM 6-Semester Result Combiner</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#111}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:8px;font-weight:bold;padding:11px 20px;font-size:14px;font-family:Arial;transition:opacity .15s}
+button:hover{opacity:.9}
+button:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-success{background:#16a34a;color:#fff}
+.btn-gray{background:#475569;color:#fff}
+.btn-red{background:#dc2626;color:#fff}
+.btn-purple{background:#7c3aed;color:#fff}
+.btn-orange{background:#ea580c;color:#fff}
+.btn-teal{background:#0891b2;color:#fff}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:6px;margin:2px}
+
+/* ============ LOGIN ============ */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#172033 0%,#1e3a8a 100%);padding:20px}
+.login-card{background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);width:520px;max-width:100%;padding:34px 38px}
+.login-card .brand-logo{width:74px;height:74px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;margin:0 auto 16px;font-family:Arial;letter-spacing:.5px}
+.login-card h1{font-size:19px;margin:0 0 4px;text-align:center;color:#172033;font-family:Arial;line-height:1.3}
+.login-card h2{font-size:15px;margin:0 0 4px;text-align:center;color:#1e3a8a;font-family:Arial;font-weight:bold}
+.login-card .prep{text-align:center;color:#7c3aed;font-size:13px;font-weight:bold;margin-bottom:4px;font-family:Arial}
+.login-card .divider{height:2px;background:linear-gradient(90deg,transparent,#2563eb,transparent);margin:16px 0 22px}
+.login-card .subtitle{text-align:center;color:#64748b;font-size:12px;margin-bottom:22px;font-family:Arial;text-transform:uppercase;letter-spacing:1px}
+.login-card label{display:block;font-size:12px;font-weight:bold;color:#334155;margin:12px 0 4px;font-family:Arial}
+.login-card input{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#111;font-size:14px;font-family:Arial}
+.login-card input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.15)}
+.login-tabs{display:flex;gap:6px;margin-bottom:16px;background:#f1f5f9;padding:4px;border-radius:9px}
+.login-tabs button{flex:1;padding:10px;border:0;background:transparent;border-radius:6px;font-weight:bold;cursor:pointer;font-size:13px;font-family:Arial;color:#475569;transition:all .2s}
+.login-tabs button.active{background:#fff;color:#2563eb;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+.login-btn{width:100%;padding:13px;border:0;border-radius:7px;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer;font-size:14px;margin-top:16px;font-family:Arial}
+.login-btn:hover{background:#1d4ed8}
+.login-error{color:#dc2626;font-size:12px;text-align:center;min-height:18px;margin-top:10px;font-family:Arial}
+
+/* ============ ADMIN HEADER ============ */
+.admin-header{position:fixed;top:0;left:0;right:0;background:#172033;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;z-index:100;font-family:Arial;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+.admin-header strong{font-size:14px}
+.admin-header .user-tag{color:#cbd5e1;margin-right:16px}
+.admin-header .logout{background:#dc2626;color:#fff;padding:6px 14px;border-radius:6px;font-weight:bold;font-size:12px}
+
+/* ============ DASHBOARD ============ */
+.dashboard{padding:80px 25px 25px;max-width:1400px;margin:auto}
+.dashboard h1{font-size:24px;margin:0 0 6px;font-family:Arial;color:#172033}
+.dashboard .subtitle{color:#64748b;font-size:14px;margin-bottom:22px;font-family:Arial}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
+.stat-card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 3px 12px #0000000d;display:flex;justify-content:space-between;align-items:center}
+.stat-card .stat-info small{color:#64748b;font-size:12px;font-family:Arial;text-transform:uppercase;letter-spacing:0.5px}
+.stat-card .stat-info strong{display:block;font-size:28px;margin-top:6px;color:#172033;font-family:Arial}
+.stat-card .stat-icon{width:48px;height:48px;border-radius:10px;background:#e8f0ff;display:flex;align-items:center;justify-content:center;font-size:22px}
+.panel{background:#fff;border-radius:12px;box-shadow:0 3px 12px #0000000d;overflow:hidden;margin-bottom:22px}
+.panel .panel-header{padding:18px 22px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.panel .panel-header h2{margin:0;font-size:17px;font-family:Arial;color:#172033}
+.panel .panel-header input{padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;width:280px;font-size:13px;font-family:Arial}
+.panel table{width:100%;border-collapse:collapse;font-family:Arial}
+.panel th,.panel td{padding:12px 16px;text-align:left;border-bottom:1px solid #f1f5f9;font-size:13px}
+.panel th{background:#f8fafc;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;font-weight:bold}
+.panel tr:hover td{background:#f8fafc}
+.panel .action-btn{padding:5px 10px;border:0;border-radius:5px;font-size:11px;font-weight:bold;cursor:pointer;margin-right:4px;font-family:Arial}
+.panel .view{background:#2563eb;color:#fff}
+.panel .delete{background:#dc2626;color:#fff}
+.panel .download{background:#16a34a;color:#fff}
+.empty-state{text-align:center;padding:60px 20px;color:#94a3b8;font-family:Arial}
+.empty-state .icon{font-size:52px;margin-bottom:12px}
+.empty-state h3{margin:0 0 6px;color:#475569;font-size:16px}
+.empty-state p{margin:0;font-size:13px}
+
+/* ============ APP (COMBINER) ============ */
+.app-wrap{max-width:1600px;margin:0 auto;padding:80px 20px 20px}
+h1.main-title{font-size:22px;margin:0 0 6px;color:#172033}
+.subtitle{color:#64748b;font-size:13px;margin-bottom:20px}
+.card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.06);margin-bottom:18px}
+.card h2{font-size:16px;margin:0 0 12px;color:#172033;border-bottom:2px solid #e2e8f0;padding-bottom:8px}
+
+/* 6 slot grid: 3 columns x 2 rows */
+.file-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px}
+.file-slot{border:2px dashed #cbd5e1;border-radius:10px;padding:12px;text-align:center;background:#f8fafc;transition:all .2s}
+.file-slot.loaded{border-color:#16a34a;background:#f0fdf4}
+.file-slot.error{border-color:#dc2626;background:#fef2f2}
+.file-slot .slot-num{font-size:11px;font-weight:bold;color:#2563eb;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.file-slot.loaded .slot-num{color:#16a34a}
+.file-slot.error .slot-num{color:#dc2626}
+.file-slot label{display:block;font-weight:bold;font-size:12px;color:#334155;margin-bottom:6px}
+.file-slot input[type=file]{font-size:11px;width:100%}
+.file-slot .status{font-size:10px;color:#64748b;margin-top:5px;font-family:monospace;word-break:break-word;line-height:1.3}
+.file-slot.loaded .status{color:#16a34a;font-weight:bold}
+.file-slot.error .status{color:#dc2626;font-weight:bold}
+.file-slot .formats{font-size:9px;color:#94a3b8;margin-top:3px}
+
+/* Diagnostic box */
+.diag-box{margin-top:12px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-left:5px solid #ea580c;border-radius:8px;font-size:12px;color:#7c2d12;font-family:Arial;line-height:1.6}
+.diag-box h4{margin:0 0 8px;font-size:13px;color:#9a3412}
+.diag-box ul{margin:6px 0 6px 18px;padding:0}
+.diag-box li{margin-bottom:4px;font-family:monospace;font-size:11px}
+.diag-box .muted{color:#9a3412;opacity:.7}
+
+/* Search box */
+.search-box{margin-top:14px;padding:14px 16px;background:#f0f9ff;border:1px solid #bae6fd;border-left:5px solid #0891b2;border-radius:8px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.search-box label{font-weight:bold;font-size:13px;color:#0c4a6e;font-family:Arial;margin:0}
+.search-box input{flex:1;min-width:220px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:7px;font-size:13px;font-family:Arial;background:#fff}
+.search-box input:focus{outline:none;border-color:#0891b2;box-shadow:0 0 0 3px rgba(8,145,178,0.15)}
+.search-box .search-info{font-size:11px;color:#0e7490;font-family:Arial;width:100%;margin-top:4px}
+.search-box .search-info .badge{display:inline-block;background:#0891b2;color:#fff;padding:2px 8px;border-radius:12px;font-weight:bold;margin-left:6px}
+
+.info-box{background:#eff6ff;border-left:4px solid #2563eb;padding:10px 14px;border-radius:6px;font-size:12px;color:#1e3a8a;margin-bottom:14px;line-height:1.6}
+.info-box.sort{background:#f0fdf4;border-left-color:#16a34a;color:#14532d}
+.preview-wrap{overflow:auto;max-height:540px;border:1px solid #e2e8f0;border-radius:8px}
+table.preview{border-collapse:collapse;font-size:10.5px;white-space:nowrap;min-width:100%}
+table.preview th,table.preview td{border:1px solid #cbd5e1;padding:4px 7px;text-align:left}
+table.preview th{background:#172033;color:#fff;position:sticky;top:0;font-size:9.5px;text-transform:uppercase;letter-spacing:.3px;z-index:2}
+table.preview tr:nth-child(even) td{background:#f8fafc}
+table.preview td.num{text-align:right;font-family:monospace}
+table.preview td.missing{background:#fef2f2;color:#b91c1c;text-align:center}
+table.preview tr.subhead th{background:#334155;font-size:9.5px;top:auto}
+/* distinct colors for each semester group header */
+table.preview th.grp1{background:#1e3a8a!important}
+table.preview th.grp2{background:#7c2d12!important}
+table.preview th.grp3{background:#166534!important}
+table.preview th.grp4{background:#7c3aed!important}
+table.preview th.grp5{background:#9a3412!important}
+table.preview th.grp6{background:#0891b2!important}
+
+/* stats */
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.stat{background:#f1f5f9;border-radius:8px;padding:10px 16px;font-size:12px;min-width:120px}
+.stat strong{display:block;font-size:20px;color:#172033;font-family:Arial}
+.stat small{color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:.5px}
+.stat.ok{background:#f0fdf4}
+.stat.ok strong{color:#16a34a}
+.stat.warn{background:#fef3c7}
+.stat.warn strong{color:#b45309}
+
+.log{background:#0f172a;color:#94a3b8;font-family:monospace;font-size:11px;padding:12px;border-radius:8px;max-height:180px;overflow:auto;line-height:1.6;margin-top:12px}
+.log .ok{color:#4ade80}
+.log .warn{color:#fbbf24}
+.log .err{color:#f87171}
+.hidden{display:none}
+
+.group-section{margin-top:22px}
+.group-section > h3{font-size:14px;color:#172033;margin:0 0 10px;padding-bottom:6px;border-bottom:2px dashed #cbd5e1}
+.group-card{background:#f8fafc;border:1px solid #e2e8f0;border-left:5px solid #2563eb;border-radius:8px;padding:14px 16px;margin-bottom:12px}
+.group-card h4{margin:0 0 4px;font-size:14px;color:#172033;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.group-card h4 .badge{background:#2563eb;color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:bold}
+.group-card .group-actions{margin-top:8px;display:flex;flex-wrap:wrap;gap:4px}
+.group-card.master-I{border-left-color:#7c3aed}
+.group-card.master-I h4 .badge{background:#7c3aed}
+.group-card.master-K{border-left-color:#ea580c}
+.group-card.master-K h4 .badge{background:#ea580c}
+/* semester/year card color coding */
+.group-card.sem1{border-left-color:#1e3a8a}
+.group-card.sem1 h4 .badge{background:#1e3a8a}
+.group-card.sem2{border-left-color:#7c2d12}
+.group-card.sem2 h4 .badge{background:#7c2d12}
+.group-card.sem3{border-left-color:#166534}
+.group-card.sem3 h4 .badge{background:#166534}
+.group-card.sem4{border-left-color:#7c3aed}
+.group-card.sem4 h4 .badge{background:#7c3aed}
+.group-card.sem5{border-left-color:#9a3412}
+.group-card.sem5 h4 .badge{background:#9a3412}
+.group-card.sem6{border-left-color:#0891b2}
+.group-card.sem6 h4 .badge{background:#0891b2}
+.group-card.year1{border-left-color:#0ea5e9}
+.group-card.year1 h4 .badge{background:#0ea5e9}
+.group-card.year2{border-left-color:#10b981}
+.group-card.year2 h4 .badge{background:#10b981}
+.group-card.year3{border-left-color:#f59e0b}
+.group-card.year3 h4 .badge{background:#f59e0b}
+
+.export-toolbar{background:#0f172a;color:#fff;padding:14px 18px;border-radius:10px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.export-toolbar strong{margin-right:8px;font-size:13px}
+.export-toolbar button{margin:0}
+
+/* Presence table */
+.presence-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 22px;box-shadow:0 4px 16px rgba(0,0,0,0.05);margin-bottom:18px;border-left:6px solid #0891b2}
+.presence-card .presence-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.presence-card h3{margin:0;font-size:15px;color:#172033;font-family:Arial}
+.presence-card h3 .badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:bold;color:#fff;background:#0891b2;margin-left:8px}
+.presence-table-wrap{overflow:auto;max-height:400px;border:1px solid #e2e8f0;border-radius:6px}
+table.presence{border-collapse:collapse;font-size:11.5px;white-space:nowrap;min-width:100%}
+table.presence th,table.presence td{border:1px solid #cbd5e1;padding:6px 10px;text-align:center}
+table.presence th{background:#0f172a;color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0;z-index:2}
+table.presence td.name,table.presence th.name{text-align:left}
+table.presence tr:nth-child(even) td{background:#f8fafc}
+table.presence td .yes{color:#16a34a;font-weight:bold;font-size:14px}
+table.presence td .no{color:#dc2626;font-weight:bold;font-size:14px}
+table.presence td.missing-cell{background:#fef2f2;color:#b91c1c;font-family:monospace;font-size:10.5px;text-align:left}
+
+@media print {
+  body{background:#fff;padding:0}
+  .no-print{display:none!important}
+  .card,.presence-card{box-shadow:none;padding:0;margin:0}
+  .preview-wrap,.presence-table-wrap{max-height:none;border:0;overflow:visible}
+  table.preview,table.presence{font-size:7.5pt;white-space:normal}
+  table.preview th,table.preview td,table.presence th,table.presence td{border:1px solid #000;padding:3px 5px}
+  table.preview th,table.presence th{background:#e5e7eb!important;color:#000!important;font-size:7pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  table.preview tr.subhead th{background:#d1d5db!important}
+  table.preview th.grp1{background:#93c5fd!important}
+  table.preview th.grp2{background:#fdba74!important}
+  table.preview th.grp3{background:#86efac!important}
+  table.preview th.grp4{background:#c4b5fd!important}
+  table.preview th.grp5{background:#fdba74!important}
+  table.preview th.grp6{background:#67e8f9!important}
+  .print-title{display:block!important;text-align:center;font-size:14pt;font-weight:bold;margin-bottom:8px}
+  @page{size:A4 landscape;margin:8mm}
+}
+.print-title{display:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ============================================================
+   CREDENTIALS
+   ============================================================ */
+const DEFAULT_ADMIN = { username: "admin", password: "admin@123" };
+const DEFAULT_USER  = { username: "user",  password: "user@123"  };
+
+/* ============================================================
+   STORAGE
+   ============================================================ */
+const loadReports = () => {
+  try { const raw = localStorage.getItem("jspm_combined_reports_6sem"); return raw ? JSON.parse(raw) : []; }
+  catch { return []; }
+};
+const saveReports = (reports) => localStorage.setItem("jspm_combined_reports_6sem", JSON.stringify(reports));
+
+/* ============================================================
+   COMBINER CORE — shared utilities
+   ============================================================ */
+const cleanText = s => (s||"").replace(/\u00a0/g," ").replace(/\s+/g," ").trim();
+
+/* Normalize header: strip non-alphanumeric, lowercase */
+const normHeader = s => String(s||"").toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+
+/* Enrollment aliases */
+const ENROLL_ALIASES = new Set([
+  "enrollmentno","enrolmentno","enrollmentnumber","enrolmentnumber",
+  "enrollno","enrolno","enrlno",
+  "eno","enno","enroll","enrolment","enrollment",
+  "rollno","rollnumber",
+  "registrationno","regno","regnno"
+]);
+const NAME_ALIASES = new Set([
+  "candidatename","candidate","name","studentname","student",
+  "fullname","nameofstudent","nameofcandidate","candname"
+]);
+const COURSE_ALIASES = new Set([
+  "course","coursecode","program","branch","courseid","coursename"
+]);
+
+function isEnrollHeader(s){
+  const n = normHeader(s);
+  if(!n) return false;
+  if(ENROLL_ALIASES.has(n)) return true;
+  if(n.includes("enroll") || n.includes("enrol")) return true;
+  if(n.includes("enrl")) return true;
+  if(n === "eno" || n === "enno") return true;
+  if(n.startsWith("eno")) return true;
+  if(/^e?n[_\- ]?no$/.test(String(s).toLowerCase().trim())) return true;
+  return false;
+}
+function isNameHeader(s){
+  const n = normHeader(s);
+  if(!n) return false;
+  if(NAME_ALIASES.has(n)) return true;
+  if(n.includes("candidate")) return true;
+  if(n.includes("studentname")) return true;
+  if(n === "student") return true;
+  if(n.includes("fullname")) return true;
+  return false;
+}
+function isCourseHeader(s){
+  const n = normHeader(s);
+  if(!n) return false;
+  if(COURSE_ALIASES.has(n)) return true;
+  if(n.startsWith("course")) return true;
+  return false;
+}
+
+/* Read a file: HTML/Excel/CSV */
+function readAnyFile(file, cb){
+  const name = (file.name || "").toLowerCase();
+  const ext = name.split(".").pop();
+  if(ext === "xlsx" || ext === "xls" || ext === "csv"){
+    const reader = new FileReader();
+    reader.onload = e => {
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: false });
+        cb({ type: "excel", aoa });
+      }catch(err){ cb({ type: "error", error: "Excel read error: " + err.message }); }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = e => cb({ type: "html", text: e.target.result });
+    reader.readAsText(file, "UTF-8");
+  }
+}
+
+/* Parse HTML result table (tolerant) */
+function parseResultHTML(html){
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const tables = Array.from(doc.querySelectorAll("table"));
+  const diagnostics = { tablesFound: tables.length, tablesScanned: [], chosenTableIndex: -1 };
+  let best = null, bestScore = -1;
+
+  tables.forEach((tbl, tblIdx) => {
+    const rows = Array.from(tbl.querySelectorAll("tr"));
+    if(rows.length < 2) return;
+    let foundHeaderIdx = -1, foundScore = -1;
+    for(let i=0;i<Math.min(rows.length,12);i++){
+      const cells = Array.from(rows[i].querySelectorAll("th,td"));
+      if(cells.length < 2) continue;
+      const texts = cells.map(c => cleanText(c.innerText));
+      const hasEnroll = texts.some(t => isEnrollHeader(t));
+      const hasName   = texts.some(t => isNameHeader(t));
+      const hasCourse = texts.some(t => isCourseHeader(t));
+      let score = 0;
+      if(hasEnroll) score += 100;
+      if(hasName) score += 100;
+      if(hasCourse) score += 10;
+      score += Math.min(rows.length - i - 1, 50);
+      if(score > foundScore){ foundScore = score; foundHeaderIdx = i; }
+    }
+    if(foundHeaderIdx === -1) return;
+    const headerTexts = Array.from(rows[foundHeaderIdx].querySelectorAll("th,td")).map(c => cleanText(c.innerText));
+    const hasEnroll = headerTexts.some(t => isEnrollHeader(t));
+    const hasName   = headerTexts.some(t => isNameHeader(t));
+    diagnostics.tablesScanned.push({ idx: tblIdx, rows: rows.length, headerIdx: foundHeaderIdx, firstCells: headerTexts.slice(0,6), hasEnroll, hasName });
+    if(!hasEnroll || !hasName) return;
+    if(foundScore > bestScore){ bestScore = foundScore; best = { tbl, headerIdx: foundHeaderIdx }; diagnostics.chosenTableIndex = tblIdx; }
+  });
+
+  if(!best){
+    const msg = `Could not find a result table with both an Enrollment column and a Name column. Scanned ${tables.length} table(s).`;
+    const err = new Error(msg);
+    err.diagnostics = diagnostics;
+    throw err;
+  }
+
+  const rows = Array.from(best.tbl.querySelectorAll("tr"));
+  const headerCells = Array.from(rows[best.headerIdx].querySelectorAll("th,td")).map(c => cleanText(c.innerText));
+  const data = [];
+  for(let i = best.headerIdx + 1; i < rows.length; i++){
+    const cells = Array.from(rows[i].querySelectorAll("td,th"));
+    if(!cells.length) continue;
+    const vals = cells.map(c => cleanText(c.innerText));
+    if(vals.every(v => v === "")) continue;
+    const obj = {};
+    headerCells.forEach((h, idx) => { if(!h) return; obj[h] = vals[idx] !== undefined ? vals[idx] : ""; });
+    data.push(obj);
+  }
+  return { headers: headerCells, rows: data, diagnostics };
+}
+
+/* Parse Excel sheet (tolerant) */
+function parseResultExcel(aoa){
+  if(!aoa || aoa.length < 2) throw new Error("Excel sheet is empty or has no data rows.");
+  const diagnostics = { rows: aoa.length, chosenHeaderIdx: -1 };
+  let headerIdx = -1, bestScore = -1;
+  for(let i=0;i<Math.min(aoa.length,15);i++){
+    const row = aoa[i] || [];
+    if(row.length < 2) continue;
+    const texts = row.map(c => cleanText(String(c)));
+    const hasEnroll = texts.some(t => isEnrollHeader(t));
+    const hasName   = texts.some(t => isNameHeader(t));
+    const hasCourse = texts.some(t => isCourseHeader(t));
+    let score = 0;
+    if(hasEnroll) score += 100;
+    if(hasName) score += 100;
+    if(hasCourse) score += 10;
+    score += Math.min(aoa.length - i - 1, 50);
+    if(score > bestScore){ bestScore = score; headerIdx = i; }
+  }
+  if(headerIdx === -1) throw new Error("Could not find a header row (need 'Enrollment'/'en_no' and 'Name').");
+  diagnostics.chosenHeaderIdx = headerIdx;
+  const headerCells = (aoa[headerIdx] || []).map(c => cleanText(String(c)));
+  const data = [];
+  for(let i = headerIdx + 1; i < aoa.length; i++){
+    const vals = (aoa[i] || []).map(c => cleanText(String(c)));
+    if(vals.every(v => v === "")) continue;
+    const obj = {};
+    headerCells.forEach((h, idx) => { if(!h) return; obj[h] = vals[idx] !== undefined ? vals[idx] : ""; });
+    data.push(obj);
+  }
+  return { headers: headerCells, rows: data, diagnostics };
+}
+
+/* Column finders */
+function findCol(headers, ...candidates){
+  for(const c of candidates){
+    const cLow = c.toLowerCase();
+    const exact = headers.find(h => h.toLowerCase() === cLow);
+    if(exact) return exact;
+  }
+  for(const c of candidates){
+    const cLow = c.toLowerCase();
+    const partial = headers.find(h => h.toLowerCase().includes(cLow));
+    if(partial) return partial;
+  }
+  for(const c of candidates){
+    const cN = normHeader(c);
+    const match = headers.find(h => normHeader(h) === cN);
+    if(match) return match;
+  }
+  return null;
+}
+function findEnrollColumn(headers){
+  const direct = findCol(headers, "Enrollment No","Enrollment No.","Enrollment","Enroll No","Enrl No","Enrolment No","En No","En_No","en_no","ENO");
+  if(direct) return direct;
+  return headers.find(h => isEnrollHeader(h)) || null;
+}
+function findNameColumn(headers){
+  const direct = findCol(headers, "Candidate Name","Candidate","Name","Student Name");
+  if(direct) return direct;
+  return headers.find(h => isNameHeader(h)) || null;
+}
+const getVal = (row, col) => col ? (row[col] ?? "") : "";
+
+function isCOCourse(courseVal){
+  if(!courseVal) return false;
+  const v = String(courseVal).trim().toUpperCase();
+  if(/^CO([\s\-\d.]*)$/.test(v)) return true;
+  if(/\bCO\b/.test(v)) return true;
+  if(/^COMPUTER/.test(v)) return true;
+  return false;
+}
+
+function parseYear(v){
+  if(v === "" || v === undefined || v === null) return null;
+  const s = String(v).trim().toUpperCase();
+  if(s === "—" || s === "-") return null;
+  const num = s.match(/\d+/);
+  if(num) return parseInt(num[0], 10);
+  const roman = { "I":1, "II":2, "III":3, "IV":4, "V":5 };
+  if(roman[s]) return roman[s];
+  const words = { "FIRST":1, "SECOND":2, "THIRD":3, "FOURTH":4, "FIFTH":5, "1ST":1, "2ND":2, "3RD":3, "4TH":4, "5TH":5, "FY":1, "SY":2, "TY":3 };
+  if(words[s]) return words[s];
+  const anyNum = s.match(/(\d+)/);
+  if(anyNum) return parseInt(anyNum[1], 10);
+  return null;
+}
+
+function parseMaster(v){
+  if(v === "" || v === undefined || v === null) return { group: 3, sub: "" };
+  const s = String(v).trim().toUpperCase();
+  if(s === "—" || s === "-") return { group: 3, sub: "" };
+  const first = s.charAt(0);
+  if(first === "I"){ const num = s.match(/^I[\s\-_]*(\d+)/); return { group: 0, sub: num ? num[1].padStart(4, "0") : s }; }
+  if(first === "K"){ const num = s.match(/^K[\s\-_]*(\d+)/); return { group: 1, sub: num ? num[1].padStart(4, "0") : s }; }
+  return { group: 2, sub: s };
+}
+function compareMaster(a, b){
+  const pa = parseMaster(a), pb = parseMaster(b);
+  if(pa.group !== pb.group) return pa.group - pb.group;
+  return pa.sub.localeCompare(pb.sub, undefined, { numeric: true, sensitivity: "base" });
+}
+
+/* ============================================================
+   BUILD MERGED DATA FOR 6 SEMESTERS
+   ============================================================ */
+function buildMerged6(semesters){ // semesters: [{headers, rows}, ... x6]
+  const N = 6;
+  const colFns = semesters.map(s => {
+    const h = s.headers;
+    return {
+      enrol:  findEnrollColumn(h),
+      name:   findNameColumn(h),
+      course: findCol(h, "Course","Course Code","Program"),
+      year:   findCol(h, "Year","Year Of Study","Year of Study"),
+      master: findCol(h, "Master","Master Code","Master No"),
+      max:    findCol(h, "Max Marks","Max Marks.","MaxMarks","Maximum Marks"),
+      mfin:   findCol(h, "Marks Final","Marks Final.","Final Marks","Marks Obtained","Total"),
+      pct:    findCol(h, "percent","Percent","Percentage","%"),
+      cls:    findCol(h, "Class","Result","Grade")
+    };
+  });
+
+  // Validate required columns for each loaded semester
+  const semPresent = semesters.map(s => s.rows.length > 0);
+  for(let i=0;i<N;i++){
+    if(!semPresent[i]) continue;
+    const c = colFns[i];
+    if(!c.enrol) throw new Error(`Semester ${i+1}: 'Enrollment No' column not found. Detected headers: ${semesters[i].headers.join(", ")}`);
+    if(!c.course) throw new Error(`Semester ${i+1}: 'Course' column not found. Detected headers: ${semesters[i].headers.join(", ")}`);
+  }
+
+  const norm = v => String(v||"").trim().toUpperCase().replace(/\s+/g,"");
+
+  // Build per-semester maps keyed by enrollment
+  const maps = [];
+  const filteredCounts = [];
+  for(let i=0;i<N;i++){
+    const map = new Map();
+    let filtered = 0;
+    if(semPresent[i]){
+      const c = colFns[i];
+      semesters[i].rows.forEach(r => {
+        if(!isCOCourse(getVal(r, c.course))) return;
+        const k = norm(getVal(r, c.enrol));
+        if(k){ map.set(k, r); filtered++; }
+      });
+    }
+    maps.push(map);
+    filteredCounts.push(filtered);
+  }
+
+  // Union of all enrollment keys
+  const keys = [];
+  const seen = new Set();
+  for(let i=0;i<N;i++){
+    if(!semPresent[i]) continue;
+    const c = colFns[i];
+    semesters[i].rows.forEach(r => {
+      if(!isCOCourse(getVal(r, c.course))) return;
+      const k = norm(getVal(r, c.enrol));
+      if(k && !seen.has(k)){ seen.add(k); keys.push(k); }
+    });
+  }
+
+  // Output headers
+  const headers = ["Enrollment No","Candidate Name"];
+  for(let i=0;i<N;i++){
+    headers.push(
+      `SEM${i+1} Year`,`SEM${i+1} Master`,`SEM${i+1} Max Marks`,`SEM${i+1} Marks Final`,`SEM${i+1} Percent`,`SEM${i+1} Class`
+    );
+  }
+
+  const out = [];
+  const presenceCounts = { both: 0 };
+  // Presence array: for each key, which semesters they appear in
+  const presenceData = [];
+
+  keys.forEach(k => {
+    // Name from first semester that has it
+    let name = "";
+    for(let i=0;i<N;i++){
+      if(maps[i].has(k) && colFns[i].name){
+        name = getVal(maps[i].get(k), colFns[i].name);
+        if(name) break;
+      }
+    }
+
+    const row = { "Enrollment No": k, "Candidate Name": name };
+    const presence = [false,false,false,false,false,false];
+    const dash = v => (v === "" || v === undefined || v === null) ? "—" : v;
+
+    for(let i=0;i<N;i++){
+      const r = maps[i].get(k);
+      const c = colFns[i];
+      if(r){
+        presence[i] = true;
+        row[`SEM${i+1} Year`]        = dash(getVal(r, c.year));
+        row[`SEM${i+1} Master`]      = dash(getVal(r, c.master));
+        row[`SEM${i+1} Max Marks`]   = dash(getVal(r, c.max));
+        row[`SEM${i+1} Marks Final`] = dash(getVal(r, c.mfin));
+        row[`SEM${i+1} Percent`]     = dash(getVal(r, c.pct));
+        row[`SEM${i+1} Class`]       = dash(getVal(r, c.cls));
+      } else {
+        row[`SEM${i+1} Year`]        = "—";
+        row[`SEM${i+1} Master`]      = "—";
+        row[`SEM${i+1} Max Marks`]   = "—";
+        row[`SEM${i+1} Marks Final`] = "—";
+        row[`SEM${i+1} Percent`]     = "—";
+        row[`SEM${i+1} Class`]       = "—";
+      }
+    }
+    out.push(row);
+    presenceData.push({ "Enrollment No": k, "Candidate Name": name, presence });
+  });
+
+  // Sort: Year ↑ (from first present semester), then Master (I before K), then Enrollment No.
+  out.sort((a, b) => {
+    const ya = firstYear(a), yb = firstYear(b);
+    const effYa = ya !== null ? ya : Infinity;
+    const effYb = yb !== null ? yb : Infinity;
+    if(effYa !== effYb) return effYa - effYb;
+    const ma = firstMaster(a), mb = firstMaster(b);
+    const mCmp = compareMaster(ma, mb);
+    if(mCmp !== 0) return mCmp;
+    return String(a["Enrollment No"]).localeCompare(String(b["Enrollment No"]), undefined, { numeric: true, sensitivity: "base" });
+  });
+
+  return {
+    headers, rows: out, presenceData,
+    stats: {
+      total: keys.length,
+      filteredCounts,
+      semPresent
+    }
+  };
+}
+
+function firstYear(row){
+  for(let i=1;i<=6;i++){
+    const v = row[`SEM${i} Year`];
+    if(v && v !== "—"){ const y = parseYear(v); if(y !== null) return y; }
+  }
+  return null;
+}
+function firstMaster(row){
+  for(let i=1;i<=6;i++){
+    const v = row[`SEM${i} Master`];
+    if(v && v !== "—") return v;
+  }
+  return "";
+}
+
+/* ============================================================
+   GROUP HELPERS
+   ============================================================ */
+function rowHasSem(row, sem){
+  for(const col of [`SEM${sem} Year`,`SEM${sem} Master`,`SEM${sem} Marks Final`]){
+    const v = row[col];
+    if(v && v !== "—") return true;
+  }
+  return false;
+}
+function groupBySemester(rows){
+  const map = new Map();
+  for(let s=1;s<=6;s++){
+    const arr = rows.filter(r => rowHasSem(r, s));
+    if(arr.length) map.set(s, arr);
+  }
+  return map;
+}
+function groupByYear(rows){
+  // Year 1 = Sem1|Sem2, Year 2 = Sem3|Sem4, Year 3 = Sem5|Sem6
+  const map = new Map();
+  const yMap = { 1:[1,2], 2:[3,4], 3:[5,6] };
+  [1,2,3].forEach(y => {
+    const semList = yMap[y];
+    const arr = rows.filter(r => semList.some(s => rowHasSem(r, s)));
+    if(arr.length) map.set(y, arr);
+  });
+  return map;
+}
+function groupByMaster(rows){
+  const map = new Map();
+  rows.forEach(r => {
+    let m = firstMaster(r);
+    if(!m || m === "—") m = "Unknown";
+    const key = String(m).trim().toUpperCase();
+    if(!map.has(key)) map.set(key, []);
+    map.get(key).push(r);
+  });
+  return new Map([...map.entries()].sort((a, b) => compareMaster(a[0], b[0])));
+}
+
+/* ============================================================
+   EXCEL / CSV EXPORT (6-semester aware)
+   ============================================================ */
+function buildWorksheet(rows, headers){
+  const aoa = [];
+  // Header row 1: Enrollment No | Candidate Name | SEMESTER 1 ... SEMESTER 6
+  const headRow1 = ["Enrollment No","Candidate Name"];
+  const headRow2 = ["",""];
+  for(let i=1;i<=6;i++){
+    headRow1.push(`SEMESTER ${i}`,"","","","","");
+    headRow2.push("Year","Master","Max Marks","Marks Final","Percent","Class");
+  }
+  aoa.push(headRow1);
+  aoa.push(headRow2);
+
+  rows.forEach(r => {
+    const rowData = ["Enrollment No","Candidate Name"].map(h => r[h] ?? "");
+    for(let i=1;i<=6;i++){
+      rowData.push(
+        r[`SEM${i} Year`] ?? "",
+        r[`SEM${i} Master`] ?? "",
+        r[`SEM${i} Max Marks`] ?? "",
+        r[`SEM${i} Marks Final`] ?? "",
+        r[`SEM${i} Percent`] ?? "",
+        r[`SEM${i} Class`] ?? ""
+      );
+    }
+    aoa.push(rowData);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!merges"] = [
+    { s:{r:0,c:0}, e:{r:1,c:0} },
+    { s:{r:0,c:1}, e:{r:1,c:1} },
+    { s:{r:0,c:2}, e:{r:0,c:7} },
+    { s:{r:0,c:8}, e:{r:0,c:13} },
+    { s:{r:0,c:14}, e:{r:0,c:19} },
+    { s:{r:0,c:20}, e:{r:0,c:25} },
+    { s:{r:0,c:26}, e:{r:0,c:31} },
+    { s:{r:0,c:32}, e:{r:0,c:37} }
+  ];
+  ws["!cols"] = [
+    {wch:16},{wch:24},
+    ...Array(6).fill(null).flatMap(() => [{wch:6},{wch:8},{wch:10},{wch:11},{wch:9},{wch:8}])
+  ];
+  return ws;
+}
+function downloadExcel(rows, headers, sheetName, fileName){
+  const ws = buildWorksheet(rows, headers);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0,31));
+  XLSX.writeFile(wb, fileName);
+}
+function downloadCSV(rows, headers, fileName){
+  const head1 = ["Enrollment No","Candidate Name"];
+  const head2 = ["",""];
+  for(let i=1;i<=6;i++){ head1.push(`SEM${i}`,"","","","",""); head2.push("Year","Master","Max Marks","Marks Final","Percent","Class"); }
+  const header = head1.join(",") + "\n" + head2.join(",");
+  const lines = rows.map(r => {
+    const arr = ["Enrollment No","Candidate Name"].map(h => r[h] ?? "");
+    for(let i=1;i<=6;i++){
+      arr.push(
+        r[`SEM${i} Year`] ?? "", r[`SEM${i} Master`] ?? "", r[`SEM${i} Max Marks`] ?? "",
+        r[`SEM${i} Marks Final`] ?? "", r[`SEM${i} Percent`] ?? "", r[`SEM${i} Class`] ?? ""
+      );
+    }
+    return arr.map(v => {
+      const s = String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    }).join(",");
+  });
+  const csv = "\uFEFF" + [header, ...lines].join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* Presence table export */
+function downloadPresenceExcel(presenceData, fileName){
+  const headers = ["Enrollment No","Candidate Name","Sem 1","Sem 2","Sem 3","Sem 4","Sem 5","Sem 6","Missing In"];
+  const aoa = [headers];
+  presenceData.forEach(p => {
+    const missing = [];
+    p.presence.forEach((v, i) => { if(!v) missing.push(`Sem ${i+1}`); });
+    aoa.push([
+      p["Enrollment No"], p["Candidate Name"],
+      ...p.presence.map(v => v ? "YES" : "NO"),
+      missing.length ? missing.join(", ") : "None"
+    ]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = [{wch:16},{wch:24},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},{wch:24}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Presence");
+  XLSX.writeFile(wb, fileName);
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function LoginScreen({ onLogin }){
+  const [mode, setMode] = useState("admin");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+    const u = username.trim(), p = password.trim();
+    if(!u || !p){ setError("Please enter both username and password."); return; }
+    if(mode === "admin"){
+      if(u === DEFAULT_ADMIN.username && p === DEFAULT_ADMIN.password){
+        onLogin({ role: "admin", name: "Administrator", username: u });
+      } else setError("Invalid admin credentials.");
+    } else {
+      if(u === DEFAULT_USER.username && p === DEFAULT_USER.password){
+        onLogin({ role: "user", name: u, username: u });
+      } else setError("Invalid user credentials.");
+    }
+  };
+
+  return (
+    <div className="login-wrap">
+      <form className="login-card" onSubmit={handleSubmit}>
+        <div className="brand-logo">JSPM</div>
+        <h1>Jayawantrao Sawant Polytechnic</h1>
+        <h2>Hadapsar, Pune</h2>
+        <div className="subtitle" style={{marginTop:"6px",marginBottom:"8px"}}>Computer Engineering Department</div>
+        <div className="prep">Prepared By — Mr. S. S. Shende</div>
+        <div className="divider"></div>
+        <div className="login-tabs">
+          <button type="button" className={mode === "admin" ? "active" : ""} onClick={() => { setMode("admin"); setError(""); }}>🔐 Admin Login</button>
+          <button type="button" className={mode === "user" ? "active" : ""} onClick={() => { setMode("user"); setError(""); }}>👤 User Login</button>
+        </div>
+        <label>Username</label>
+        <input value={username} onChange={e => setUsername(e.target.value)} placeholder={mode === "admin" ? "Enter admin username" : "Enter user username"} />
+        <label>Password</label>
+        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" />
+        <div className="login-error">{error}</div>
+        <button type="submit" className="login-btn">{mode === "admin" ? "🔐 Login as Admin" : "👤 Login as User"}</button>
+      </form>
+    </div>
+  );
+}
+
+/* ============================================================
+   COMBINER APP (6 SEMESTERS)
+   ============================================================ */
+function Combiner({ session, onLogout, onSaveReport }){
+  // Six independent semester slots
+  const emptySem = () => ({ rows: [], headers: [], info: { loaded:false, label:"", error:false } });
+  const [sems, setSems] = useState([emptySem(),emptySem(),emptySem(),emptySem(),emptySem(),emptySem()]);
+
+  const [mergedRows, setMergedRows] = useState([]);
+  const [mergedHeaders, setMergedHeaders] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [presenceData, setPresenceData] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [diag, setDiag] = useState(null);
+  const [saved, setSaved] = useState(false);
+  const [enSearch, setEnSearch] = useState("");
+
+  const addLog = (msg, cls="") => setLogs(prev => [...prev, { msg, cls }]);
+
+  const updateSem = (idx, patch) => {
+    setSems(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], ...patch };
+      return copy;
+    });
+  };
+
+  const handleFile = (slotIdx, file) => {
+    if(!file){
+      updateSem(slotIdx, { rows: [], headers: [], info: { loaded:false, label:"", error:false } });
+      return;
+    }
+    readAnyFile(file, result => {
+      try{
+        let parsed;
+        if(result.type === "html") parsed = parseResultHTML(result.text);
+        else if(result.type === "excel") parsed = parseResultExcel(result.aoa);
+        else throw new Error(result.error || "Unknown file type");
+
+        updateSem(slotIdx, {
+          rows: parsed.rows,
+          headers: parsed.headers,
+          info: { loaded:true, error:false, label: `${file.name} (${result.type === "html" ? "HTML" : "Excel"}) — ${parsed.rows.length} rows` }
+        });
+        setDiag(null);
+        addLog(`Sem ${slotIdx+1} loaded [${result.type}]: ${parsed.rows.length} rows | Headers: ${parsed.headers.slice(0,6).join(" | ")}`, "ok");
+      }catch(err){
+        updateSem(slotIdx, { rows: [], headers: [], info: { loaded:false, error:true, label: "Parse failed — see diagnostics" } });
+        if(err.diagnostics) setDiag({ slot: slotIdx+1, file: file.name, ...err.diagnostics, message: err.message });
+        else setDiag({ slot: slotIdx+1, file: file.name, message: err.message });
+        addLog(`Sem ${slotIdx+1} ERROR: ` + err.message, "err");
+      }
+    });
+  };
+
+  const handleMerge = () => {
+    try{
+      setLogs([]);
+      setEnSearch("");
+      const inputs = sems.map(s => ({ headers: s.headers, rows: s.rows }));
+      const result = buildMerged6(inputs);
+      setMergedHeaders(result.headers);
+      setMergedRows(result.rows);
+      setStats(result.stats);
+      setPresenceData(result.presenceData);
+
+      addLog(`Merged ${result.stats.total} unique CO enrollment numbers across loaded semesters.`, "ok");
+      addLog(`Filtered row counts (per loaded sem): ${result.stats.filteredCounts.map((c,i) => c > 0 ? `Sem${i+1}: ${c}` : null).filter(Boolean).join("  |  ")}`, "ok");
+      addLog(`✓ Sorted: Year ↑ → Master (I before K) → Enrollment No. ↑`, "ok");
+    }catch(err){
+      alert("Merge error: " + err.message);
+      addLog("MERGE ERROR: " + err.message, "err");
+    }
+  };
+
+  const handleReset = () => {
+    if(!confirm("Clear all loaded files and merged data?")) return;
+    setSems([emptySem(),emptySem(),emptySem(),emptySem(),emptySem(),emptySem()]);
+    setMergedRows([]); setMergedHeaders([]); setStats(null);
+    setPresenceData([]); setLogs([]); setDiag(null); setEnSearch("");
+  };
+
+  const handleSave = () => {
+    if(!mergedRows.length){ alert("Nothing to save. Please merge first."); return; }
+    onSaveReport({
+      mergedHeaders, mergedRows, stats, presenceData,
+      createdBy: session.name || session.username
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const normEn = v => String(v||"").trim().toUpperCase().replace(/\s+/g,"");
+  const searchTerm = normEn(enSearch);
+
+  const filteredRows = searchTerm
+    ? mergedRows.filter(r => normEn(r["Enrollment No"]).includes(searchTerm))
+    : mergedRows;
+
+  const filteredPresence = searchTerm
+    ? presenceData.filter(p => normEn(p["Enrollment No"]).includes(searchTerm))
+    : presenceData;
+
+  const loadedCount = sems.filter(s => s.rows.length > 0).length;
+
+  const exportExcelAll = () => {
+    if(!filteredRows.length) return;
+    const suffix = searchTerm ? `_Filtered_${searchTerm}` : "";
+    const fname = `CO_6Sem_Combined${suffix}_${new Date().toISOString().slice(0,10)}.xlsx`;
+    downloadExcel(filteredRows, mergedHeaders, "CO 6Sem Combined", fname);
+    addLog("✓ Excel → " + fname, "ok");
+  };
+  const exportCSVAll = () => {
+    if(!filteredRows.length) return;
+    const suffix = searchTerm ? `_Filtered_${searchTerm}` : "";
+    downloadCSV(filteredRows, mergedHeaders, `CO_6Sem_Combined${suffix}_${new Date().toISOString().slice(0,10)}.csv`);
+    addLog("✓ CSV generated", "ok");
+  };
+
+  /* ------- PRINT ------- */
+  const printRows = (rows, title) => {
+    const area = document.getElementById("printArea");
+    const titleEl = document.getElementById("printTitle");
+    titleEl.textContent = title;
+    renderPreviewInto(area, mergedHeaders, rows);
+    const dt = document.title;
+    document.title = title.replace(/\s+/g,"_");
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.title = dt;
+        renderPreviewInto(area, mergedHeaders, filteredRows);
+      }, 400);
+    }, 100);
+  };
+
+  const renderPreviewInto = (container, headers, rows) => {
+    container.innerHTML = "";
+    const thead = document.createElement("thead");
+    const hr = document.createElement("tr");
+    const thE = document.createElement("th"); thE.textContent = "Enrollment No"; thE.rowSpan = 2; hr.appendChild(thE);
+    const thN = document.createElement("th"); thN.textContent = "Candidate Name"; thN.rowSpan = 2; hr.appendChild(thN);
+    for(let i=1;i<=6;i++){
+      const g = document.createElement("th");
+      g.textContent = `SEMESTER ${i}`; g.colSpan = 6; g.className = "grp" + i;
+      hr.appendChild(g);
+    }
+    thead.appendChild(hr);
+    const hr2 = document.createElement("tr"); hr2.className = "subhead";
+    for(let i=1;i<=6;i++){
+      ["Year","Master","Max Marks","Marks Final","Percent","Class"].forEach(t => {
+        const th = document.createElement("th"); th.textContent = t; hr2.appendChild(th);
+      });
+    }
+    thead.appendChild(hr2);
+    container.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      headers.forEach(h => {
+        const td = document.createElement("td");
+        const v = r[h] ?? "";
+        td.textContent = v;
+        if(/marks|percent/i.test(h)) td.className = "num";
+        if(v === "—") td.classList.add("missing");
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    container.appendChild(tbody);
+  };
+
+  const previewRef = useRef(null);
+  useEffect(() => {
+    if(previewRef.current && mergedRows.length){
+      renderPreviewInto(previewRef.current, mergedHeaders, filteredRows);
+    }
+  }, [mergedRows, mergedHeaders, searchTerm]);
+
+  const semGroups = mergedRows.length ? groupBySemester(filteredRows) : new Map();
+  const yearGroups = mergedRows.length ? groupByYear(filteredRows) : new Map();
+  const masterGroups = mergedRows.length ? groupByMaster(filteredRows) : new Map();
+
+  return (
+    <div className="app-wrap">
+      <h1 className="main-title">📊 CO 6-Semester Result Combiner</h1>
+      <div className="subtitle">Upload each semester (1–6) as HTML (.htm/.html) or Excel (.xlsx/.xls/.csv). Only Course = CO is kept.</div>
+
+      <div className="card no-print">
+        <h2>1️⃣ Upload Result Files ({loadedCount}/6 loaded)</h2>
+        <div className="file-grid">
+          {[0,1,2,3,4,5].map(idx => {
+            const s = sems[idx];
+            return (
+              <div key={idx} className={"file-slot" + (s.info.loaded ? " loaded" : "") + (s.info.error ? " error" : "")}>
+                <div className="slot-num">Semester {idx+1}</div>
+                <label>📄 Result File</label>
+                <input type="file" accept=".htm,.html,.txt,.xlsx,.xls,.csv" onChange={e => handleFile(idx, e.target.files[0])} />
+                <div className="formats">.htm .html .xlsx .xls .csv</div>
+                <div className="status">{s.info.label || "No file selected"}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {diag && (
+          <div className="diag-box">
+            <h4>🔍 Parser Diagnostics — Semester {diag.slot} ({diag.file})</h4>
+            <div><strong>Message:</strong> {diag.message}</div>
+            {diag.tablesFound !== undefined && (
+              <>
+                <div style={{marginTop:"8px"}}><strong>Tables found:</strong> {diag.tablesFound}</div>
+                {diag.tablesScanned && diag.tablesScanned.length > 0 ? (
+                  <ul>
+                    {diag.tablesScanned.map((t, i) => (
+                      <li key={i}>Table #{t.idx} — {t.rows} rows, header at row {t.headerIdx+1}. Header cells: <em>{t.firstCells.join(" | ")}</em></li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="muted">No table with an Enrollment/Name header was found.</div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="search-box">
+          <label>🔎 Search by Enrollment No:</label>
+          <input
+            type="text"
+            placeholder="e.g. 2024CS001 (partial match works)"
+            value={enSearch}
+            onChange={e => setEnSearch(e.target.value)}
+            disabled={!mergedRows.length}
+          />
+          {enSearch && <button className="btn-gray btn-sm" onClick={() => setEnSearch("")}>✕ Clear</button>}
+          {mergedRows.length > 0 && (
+            <div className="search-info">
+              {searchTerm
+                ? <>Showing <strong>{filteredRows.length}</strong> of {mergedRows.length} students matching <span className="badge">{enSearch}</span></>
+                : <>Total students: <strong>{mergedRows.length}</strong>. Type an enrollment number to filter.</>
+              }
+            </div>
+          )}
+        </div>
+
+        <div className="info-box">
+          <strong>Output:</strong> Only <code>Course = CO</code> rows kept. Each student appears once with 6 semesters side-by-side.
+          Missing semesters show <b>“—”</b>. A <b>Presence Table</b> below shows which semesters each student appears in.
+        </div>
+        <div className="info-box sort">
+          <strong>Sorting:</strong> Year ↑ → Master (<b>I</b> before <b>K</b>) → Enrollment No. ↑
+        </div>
+
+        <button className="btn-primary" disabled={loadedCount < 2} onClick={handleMerge}>🔀 Merge &amp; Preview</button>
+        <button className="btn-gray" onClick={handleReset}>♻️ Reset</button>
+        {session.role === "user" && (
+          <button className="btn-success" onClick={handleSave}>💾 Save Report</button>
+        )}
+        {saved && <span style={{marginLeft:"10px",color:"#16a34a",fontWeight:"bold",fontSize:"13px"}}>✓ Saved!</span>}
+      </div>
+
+      {mergedRows.length > 0 && (
+        <>
+          <div className="card">
+            <h2 className="no-print">2️⃣ Combined Preview — 6 Semesters {searchTerm && <span style={{color:"#0891b2",fontWeight:"bold"}}>— Filter: {enSearch}</span>}</h2>
+            <div className="print-title" id="printTitle">CO 6-Semester Combined Result</div>
+
+            {stats && (
+              <div className="stats no-print">
+                <div className="stat ok"><small>Total CO Students</small><strong>{stats.total}</strong></div>
+                {stats.filteredCounts.map((c, i) => c > 0 && (
+                  <div className="stat" key={i}><small>Sem {i+1}</small><strong>{c}</strong></div>
+                ))}
+              </div>
+            )}
+
+            <div className="export-toolbar no-print">
+              <strong>📤 {searchTerm ? "Export Filtered:" : "Overall Export:"}</strong>
+              <button className="btn-success btn-sm" onClick={exportExcelAll}>⬇️ {searchTerm ? "Filtered" : "All"} Excel</button>
+              <button className="btn-red btn-sm" onClick={() => printRows(filteredRows, searchTerm ? `CO 6-Sem Result — Filter: ${enSearch}` : "CO 6-Semester Combined Result — All Students")}>📕 {searchTerm ? "Filtered" : "All"} PDF</button>
+              <button className="btn-primary btn-sm" onClick={() => printRows(filteredRows, searchTerm ? `CO 6-Sem Result — Filter: ${enSearch}` : "CO 6-Semester Combined Result — All Students")}>🖨️ {searchTerm ? "Filtered" : "All"} Print</button>
+              <button className="btn-red btn-sm" onClick={exportCSVAll}>⬇️ {searchTerm ? "Filtered" : "All"} CSV</button>
+            </div>
+
+            <div className="preview-wrap">
+              <table className="preview" id="printArea" ref={previewRef}></table>
+            </div>
+
+            {logs.length > 0 && (
+              <div className="log no-print">
+                {logs.map((l, i) => <div key={i} className={l.cls}>{l.msg}</div>)}
+              </div>
+            )}
+
+            {/* ---- Presence Table ---- */}
+            <div className="presence-card no-print">
+              <div className="presence-header">
+                <h3>📋 Semester Presence Table <span className="badge">{filteredPresence.length} students</span></h3>
+                <div>
+                  <button
+                    className="btn-success btn-sm"
+                    disabled={!filteredPresence.length}
+                    onClick={() => downloadPresenceExcel(filteredPresence, `CO_Presence_${new Date().toISOString().slice(0,10)}.xlsx`)}>
+                    ⬇️ Excel
+                  </button>
+                </div>
+              </div>
+              {filteredPresence.length === 0 ? (
+                <div className="mismatch-empty">No students.</div>
+              ) : (
+                <div className="presence-table-wrap">
+                  <table className="presence">
+                    <thead>
+                      <tr>
+                        <th className="name">Enrollment No</th>
+                        <th className="name">Candidate Name</th>
+                        <th>Sem 1</th><th>Sem 2</th><th>Sem 3</th><th>Sem 4</th><th>Sem 5</th><th>Sem 6</th>
+                        <th className="name">Missing In</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPresence.map((p, i) => {
+                        const missing = [];
+                        p.presence.forEach((v, si) => { if(!v) missing.push(`Sem ${si+1}`); });
+                        return (
+                          <tr key={i}>
+                            <td className="name"><strong>{p["Enrollment No"]}</strong></td>
+                            <td className="name">{p["Candidate Name"]}</td>
+                            {p.presence.map((v, si) => (
+                              <td key={si}>
+                                {v ? <span className="yes">✓</span> : <span className="no">—</span>}
+                              </td>
+                            ))}
+                            <td className="name missing-cell">{missing.length ? missing.join(", ") : "None"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ---- By Semester cards ---- */}
+          <div className="card no-print">
+            <h2>3️⃣ Export &amp; Print by Semester</h2>
+            {[...semGroups.entries()].map(([sem, rows]) => (
+              <div className={"group-card sem" + sem} key={"sem"+sem}>
+                <h4>📘 Semester {sem} <span className="badge">{rows.length} students</span></h4>
+                <div className="group-actions">
+                  <button className="btn-success btn-sm" onClick={() => downloadExcel(rows, mergedHeaders, `Sem ${sem}`, `CO_Sem${sem}_${new Date().toISOString().slice(0,10)}.xlsx`)}>⬇️ Excel</button>
+                  <button className="btn-red btn-sm" onClick={() => printRows(rows, `CO Result — Semester ${sem}`)}>📕 PDF</button>
+                  <button className="btn-primary btn-sm" onClick={() => printRows(rows, `CO Result — Semester ${sem}`)}>🖨️ Print</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ---- By Year cards ---- */}
+          <div className="card no-print">
+            <h2>4️⃣ Export &amp; Print by Year</h2>
+            {[...yearGroups.entries()].map(([yr, rows]) => (
+              <div className={"group-card year" + yr} key={"y"+yr}>
+                <h4>🎓 Year {yr} <span className="badge">{rows.length} students</span>
+                  <span style={{fontSize:"11px",color:"#64748b",fontWeight:"normal"}}>Semesters {yr===1?"1+2":yr===2?"3+4":"5+6"}</span>
+                </h4>
+                <div className="group-actions">
+                  <button className="btn-success btn-sm" onClick={() => downloadExcel(rows, mergedHeaders, `Year ${yr}`, `CO_Year${yr}_${new Date().toISOString().slice(0,10)}.xlsx`)}>⬇️ Excel</button>
+                  <button className="btn-red btn-sm" onClick={() => printRows(rows, `CO Result — Year ${yr}`)}>📕 PDF</button>
+                  <button className="btn-primary btn-sm" onClick={() => printRows(rows, `CO Result — Year ${yr}`)}>🖨️ Print</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ---- By Master cards ---- */}
+          <div className="card no-print">
+            <h2>5️⃣ Export &amp; Print by Master</h2>
+            {[...masterGroups.entries()].map(([key, rows]) => {
+              const cls = key.startsWith("I") ? "master-I" : (key.startsWith("K") ? "master-K" : "");
+              return (
+                <div className={"group-card " + cls} key={"m"+key}>
+                  <h4>🎓 Master {key} <span className="badge">{rows.length} students</span></h4>
+                  <div className="group-actions">
+                    <button className="btn-success btn-sm" onClick={() => downloadExcel(rows, mergedHeaders, `Master ${key}`.slice(0,31), `CO_Master_${key}_${new Date().toISOString().slice(0,10)}.xlsx`)}>⬇️ Excel</button>
+                    <button className="btn-red btn-sm" onClick={() => printRows(rows, `CO Result — Master ${key}`)}>📕 PDF</button>
+                    <button className="btn-primary btn-sm" onClick={() => printRows(rows, `CO Result — Master ${key}`)}>🖨️ Print</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   ADMIN DASHBOARD
+   ============================================================ */
+function AdminDashboard({ reports, onDelete, onRefresh }){
+  const [search, setSearch] = useState("");
+  const [viewing, setViewing] = useState(null);
+
+  const filtered = reports.filter(r =>
+    (r.stats && String(r.stats.total).includes(search)) ||
+    (r.createdBy || "").toLowerCase().includes(search.toLowerCase()) ||
+    (r.createdAt || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalReports = reports.length;
+  const today = new Date().toISOString().slice(0,10);
+  const todayCount = reports.filter(r => r.createdAt && r.createdAt.slice(0,10) === today).length;
+  const totalStudents = reports.reduce((a, r) => a + (r.stats?.total || 0), 0);
+
+  const downloadStoredReport = (r) => {
+    downloadExcel(r.mergedRows, r.mergedHeaders, "CO 6Sem Combined", `Report_${r.id}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+
+  return (
+    <div className="dashboard">
+      <h1>📊 Admin Dashboard</h1>
+      <div className="subtitle">Manage all merged 6-semester reports saved by users</div>
+
+      <div className="stats-grid">
+        <div className="stat-card"><div className="stat-info"><small>Total Reports</small><strong>{totalReports}</strong></div><div className="stat-icon">📄</div></div>
+        <div className="stat-card"><div className="stat-info"><small>Today</small><strong>{todayCount}</strong></div><div className="stat-icon">📅</div></div>
+        <div className="stat-card"><div className="stat-info"><small>Total Students</small><strong>{totalStudents}</strong></div><div className="stat-icon">🎓</div></div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">
+          <h2>📋 All Saved Reports</h2>
+          <div style={{display:"flex",gap:"8px",alignItems:"center",flexWrap:"wrap"}}>
+            <input placeholder="Search by user, date, count..." value={search} onChange={e => setSearch(e.target.value)} />
+            <button className="btn-primary btn-sm" onClick={onRefresh}>↻ Refresh</button>
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="icon">📭</div>
+            <h3>No saved reports yet</h3>
+            <p>Reports saved by users will appear here.</p>
+          </div>
+        ) : (
+          <div style={{overflowX:"auto"}}>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th><th>Saved By</th><th>Saved At</th><th>Students</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((r, i) => (
+                  <tr key={r.id}>
+                    <td>{i+1}</td>
+                    <td><strong>{r.createdBy || "—"}</strong></td>
+                    <td>{r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}</td>
+                    <td>{r.stats?.total || 0}</td>
+                    <td>
+                      <button className="action-btn view" onClick={() => setViewing(r)}>👁 View</button>
+                      <button className="action-btn download" onClick={() => downloadStoredReport(r)}>⬇ Excel</button>
+                      <button className="action-btn delete" onClick={() => onDelete(r)}>🗑 Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {viewing && (
+        <div className="login-wrap" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",zIndex:999,alignItems:"flex-start",paddingTop:"40px"}} onClick={(e) => { if(e.target === e.currentTarget) setViewing(null); }}>
+          <div style={{background:"#eef2f7",borderRadius:"12px",padding:"20px",maxWidth:"1500px",width:"100%",maxHeight:"90vh",overflow:"auto"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px",flexWrap:"wrap",gap:"8px"}}>
+              <h3 style={{margin:0,fontFamily:"Arial"}}>📄 Report by {viewing.createdBy} — {new Date(viewing.createdAt).toLocaleString()}</h3>
+              <div>
+                <button className="btn-success btn-sm" onClick={() => downloadStoredReport(viewing)}>⬇ Excel</button>
+                <button className="btn-red btn-sm" onClick={() => setViewing(null)} style={{marginLeft:"6px"}}>✕ Close</button>
+              </div>
+            </div>
+            <div className="preview-wrap" style={{background:"#fff"}}>
+              <table className="preview">
+                <thead>
+                  <tr>
+                    <th rowSpan="2">Enrollment No</th>
+                    <th rowSpan="2">Candidate Name</th>
+                    {[1,2,3,4,5,6].map(i => <th key={i} colSpan="6" className={"grp"+i}>SEMESTER {i}</th>)}
+                  </tr>
+                  <tr className="subhead">
+                    {[1,2,3,4,5,6].flatMap(i => ["Year","Master","Max Marks","Marks Final","Percent","Class"].map((t,j) => <th key={i+"_"+j}>{t}</th>))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {viewing.mergedRows.map((r, i) => (
+                    <tr key={i}>
+                      {viewing.mergedHeaders.map(h => {
+                        const v = r[h] ?? "";
+                        const tdCls = (/marks|percent/i.test(h) ? "num " : "") + (v === "—" ? "missing" : "");
+                        return <td key={h} className={tdCls}>{v}</td>;
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   WRAPPERS
+   ============================================================ */
+function AdminPanel({ session, onLogout }){
+  const [tab, setTab] = useState("dashboard");
+  const [reports, setReports] = useState([]);
+  const reload = () => setReports(loadReports());
+  useEffect(() => { reload(); }, []);
+
+  const handleSaveReport = (payload) => {
+    const all = loadReports();
+    all.push({
+      id: "rpt_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      mergedHeaders: payload.mergedHeaders,
+      mergedRows: payload.mergedRows,
+      stats: payload.stats,
+      presenceData: payload.presenceData,
+      createdBy: payload.createdBy,
+      createdAt: new Date().toISOString()
+    });
+    saveReports(all); reload();
+  };
+  const handleDelete = (r) => {
+    if(!confirm(`Delete report by "${r.createdBy}"?`)) return;
+    saveReports(loadReports().filter(x => x.id !== r.id));
+    reload();
+  };
+
+  return (
+    <>
+      <div className="admin-header no-print">
+        <div><strong>🔐 JSPM Admin Panel</strong> &nbsp;<span style={{color:"#94a3b8",fontWeight:"normal",fontSize:"12px"}}>| Computer Engineering Dept.</span></div>
+        <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+          <button className="btn-sm" style={{background: tab === "dashboard" ? "#2563eb" : "#334155",color:"#fff"}} onClick={() => setTab("dashboard")}>📊 Dashboard</button>
+          <button className="btn-sm" style={{background: tab === "combiner" ? "#2563eb" : "#334155",color:"#fff"}} onClick={() => setTab("combiner")}>🔀 Combiner</button>
+          <span className="user-tag">👤 {session.name}</span>
+          <button className="logout" onClick={onLogout}>Logout</button>
+        </div>
+      </div>
+      {tab === "dashboard" ? (
+        <AdminDashboard reports={reports} onDelete={handleDelete} onRefresh={reload} />
+      ) : (
+        <Combiner session={session} onLogout={onLogout} onSaveReport={handleSaveReport} />
+      )}
+    </>
+  );
+}
+
+function UserPanel({ session, onLogout }){
+  const handleSaveReport = (payload) => {
+    const all = loadReports();
+    all.push({
+      id: "rpt_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      mergedHeaders: payload.mergedHeaders,
+      mergedRows: payload.mergedRows,
+      stats: payload.stats,
+      presenceData: payload.presenceData,
+      createdBy: payload.createdBy,
+      createdAt: new Date().toISOString()
+    });
+    saveReports(all);
+  };
+
+  return (
+    <>
+      <div className="admin-header no-print">
+        <div><strong>👤 JSPM User Panel</strong> &nbsp;<span style={{color:"#94a3b8",fontWeight:"normal",fontSize:"12px"}}>| Computer Engineering Dept.</span></div>
+        <div>
+          <span className="user-tag">👤 {session.name}</span>
+          <button className="logout" onClick={onLogout}>Logout</button>
+        </div>
+      </div>
+      <Combiner session={session} onLogout={onLogout} onSaveReport={handleSaveReport} />
+    </>
+  );
+}
+
+/* ============================================================
+   MAIN APP
+   ============================================================ */
+function App(){
+  const [session, setSession] = useState(null);
+  const handleLogin = (s) => setSession(s);
+  const handleLogout = () => setSession(null);
+
+  if(!session) return <LoginScreen onLogin={handleLogin} />;
+  if(session.role === "admin") return <AdminPanel session={session} onLogout={handleLogout} />;
+  if(session.role === "user")  return <UserPanel  session={session} onLogout={handleLogout} />;
+  return <LoginScreen onLogin={handleLogin} />;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
